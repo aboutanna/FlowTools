@@ -63,7 +63,7 @@ async function renderWorkspaceUltimate(user) {
     let prefsMap = {};
     let liveStatusMap = {
         timeline: "暂无记录",
-        muscle: "保持专注",
+        recovery: "恢复中", // 完美契合 Recovery 偏好
         memo: "时刻记录"
     };
 
