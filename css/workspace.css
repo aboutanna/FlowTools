@@ -1,0 +1,46 @@
+body{
+
+    margin:0;
+
+    background:#faf9f7;
+
+    color:#4f4f4f;
+
+    font-family:-apple-system,BlinkMacSystemFont,
+        "SF Pro Display","Helvetica Neue",sans-serif;
+
+}
+
+.workspace{
+
+    width:min(720px,92%);
+
+    margin:70px auto;
+
+}
+
+header{
+
+    margin-bottom:48px;
+
+}
+
+header h1{
+
+    font-size:36px;
+
+    font-weight:600;
+
+    margin:0;
+
+}
+
+#greeting{
+
+    color:#8b8b8b;
+
+    margin-top:12px;
+
+    font-size:18px;
+
+}

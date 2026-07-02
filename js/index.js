@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const user = await Auth.currentUser();
 
     if (user) {
-        location.href = "dashboard.html";
+        location.href = "workspace.html";
         return;
     }
 
@@ -46,7 +46,7 @@ async function handleLogin() {
 
     }
 
-    location.href = "dashboard.html";
+    location.href = "workspace.html";
 
 }
 
