@@ -1,5 +1,5 @@
 /* ==========================================================================
-   FlowTools - Workspace Core Logic (Phase 6 - Ultimate Cloud Federation)
+   FlowTools - Workspace Core Logic (Phase 6 - Ultimate Fixed Edition)
    ========================================================================== */
 
 import Tools from './tools.js';
@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 2. 激活动态问候语
     updateGreeting();
 
-    // 3. 【终极第六阶段】多表联网，动态编织全大厅的卡片与实时状态
+    // 3. 多表联网，动态编织全大厅的卡片与实时状态
     await renderWorkspaceUltimate(user);
 
     // 4. 绑定安全退出事件
@@ -52,8 +52,7 @@ function updateGreeting() {
 }
 
 /**
- * 【第六阶段终极核心】大厅合流控制中心
- * 兼顾安全降级，防止因业务表未上线导致页面崩塌
+ * 大厅合流控制中心（已完美修正变量与刷新漏洞）
  */
 async function renderWorkspaceUltimate(user) {
     const toolListContainer = document.getElementById("toolList");
@@ -83,10 +82,8 @@ async function renderWorkspaceUltimate(user) {
         console.error("偏好读取降级:", err);
     }
 
-    // ── 🌿 核心数据流 B：尝试联网偷看业务表状态（带最高安全防御） ──
+    // ── 🌿 核心数据流 B：尝试联网偷看业务表状态 ──
     try {
-        // 1. 尝试探测 Timeline 真实业务表
-        // 计算今天的开始时间戳，用于统计“今天新增”
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
 
@@ -96,18 +93,9 @@ async function renderWorkspaceUltimate(user) {
             .eq("user_id", user.id)
             .gte("created_at", todayStart.toISOString());
 
-        // 如果表存在且正常返回了数字，立刻擦掉假数据，换上真状态！
         if (!tlError && timelineCount !== null) {
             liveStatusMap.timeline = timelineCount > 0 ? `今天新增 ${timelineCount} 条` : "今天暂无新增";
         }
-    } catch (e) {
-        // 如果表没上线，静悄悄地忽略，绝不让页面报错崩溃
-    }
-
-    try {
-        // 2. 预留 Muscle 与 Memo 表的未来动态探测触角
-        // 当你以后建立了 muscle_records 或 memos 表时，在这里写逻辑即可
-        // 目前它们会稳稳地停留在 liveStatusMap 的默认安全提示上
     } catch (e) {}
 
     toolListContainer.innerHTML = "";
@@ -131,7 +119,7 @@ async function renderWorkspaceUltimate(user) {
 
         // 点击卡片挂起并踩点时间
         cardAnchor.addEventListener("click", async (e) => {
-            if (e.target.classList.contains("menu-btn")) return;
+            if (e.target.classList.contains("menu-btn") || e.target.closest(".pin-menu")) return;
             e.preventDefault(); 
             try {
                 const currentPinned = prefsMap[tool.id]?.isPinned || false;
@@ -153,12 +141,10 @@ async function renderWorkspaceUltimate(user) {
         const textWrapper = document.createElement("div");
         const toolTitle = document.createElement("h2");
         
-        // 换上了精雕细琢、充满棉麻纸张线条感的 Muji 极简图钉符号 ⚲
         const isPinned = prefsMap[tool.id]?.isPinned;
         toolTitle.textContent = `${isPinned ? '⚲ ' : ''}${tool.icon} ${tool.name}`; 
 
         const toolSubtitle = document.createElement("p");
-        // 💡 核心变化：不再死用 tools.js 里的写死文本，优先采用我们实时联网计算出的活状态！
         toolSubtitle.textContent = liveStatusMap[tool.id] || tool.subtitle; 
 
         textWrapper.appendChild(toolTitle);
@@ -187,7 +173,8 @@ async function renderWorkspaceUltimate(user) {
                 actionEvent.stopPropagation();
                 pinMenu.remove();
 
-                const currentOpened = prefsMap[tool.id]?.lastOpened ? new Date(preferencesMap[tool.id].lastOpened).toISOString() : null;
+                // 💡 【修复核心】校正变量名为 prefsMap
+                const currentOpened = prefsMap[tool.id]?.lastOpened ? new Date(prefsMap[tool.id].lastOpened).toISOString() : null;
 
                 const { error } = await db.from("tool_prefs").upsert({
                     user_id: user.id,
@@ -198,7 +185,10 @@ async function renderWorkspaceUltimate(user) {
                 }, { onConflict: 'user_id,tool_id' });
 
                 if (!error) {
+                    // 💡 【修复核心】统一调用刷新函数
                     await renderWorkspaceUltimate(user);
+                } else {
+                    console.error("置顶操作失败:", error);
                 }
             });
 
