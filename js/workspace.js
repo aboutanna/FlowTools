@@ -1,5 +1,5 @@
 /* ==========================================================================
-   FlowTools - Workspace Core Logic (Phase 4 - Supabase Last Opened)
+   FlowTools - Workspace Core Logic (Phase 4 - Light Tool Preferences)
    ========================================================================== */
 
 import Tools from './tools.js';
@@ -13,8 +13,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 2. 激活动态问候语
     updateGreeting();
 
-    // 3. 【第四阶段核心】从 Supabase 读取数据并自动排版卡片
-    await renderWorkspaceToolsFromSupabase(user);
+    // 3. 【第四阶段核心】从全新极简表 tool_prefs 读取数据并自动排版卡片
+    await renderWorkspaceToolsFromPrefs(user);
 
     // 4. 绑定安全退出事件
     const logoutBtn = document.getElementById("logoutBtn");
@@ -46,60 +46,69 @@ function updateGreeting() {
 }
 
 /**
- * 【第四阶段真数据核心】对接 Supabase 排序渲染中心
+ * 【架构升级】全面对接 tool_prefs 表的聪明排序渲染中心
  */
-async function renderWorkspaceToolsFromSupabase(user) {
+async function renderWorkspaceToolsFromPrefs(user) {
     const toolListContainer = document.getElementById("toolList");
     if (!toolListContainer) return;
 
     toolListContainer.innerHTML = "<div>Loading Muji notebook...</div>";
 
-    let supabaseLastOpened = {};
+    let prefsMap = {};
 
     try {
-        // A. 联网向 Supabase 的 profiles 表索要当前用户的 last_opened 记录
+        // A. 联网拉取当前用户在 tool_prefs 表里的所有工具偏好记录
         const { data, error } = await db
-            .from("profiles")
-            .select("last_opened")
-            .eq("id", user.id)
-            .single();
+            .from("tool_prefs")
+            .select("tool_id, is_pinned, last_opened_at")
+            .eq("user_id", user.id);
 
-        if (data && data.last_opened) {
-            supabaseLastOpened = data.last_opened; // 成功拿到云端时间数据
+        if (data) {
+            // 将数组扁平化存入地图，方便后续快速比对排序
+            data.forEach(pref => {
+                prefsMap[pref.tool_id] = {
+                    isPinned: pref.is_pinned,
+                    lastOpened: pref.last_opened_at ? new Date(pref.last_opened_at).getTime() : 0
+                };
+            });
         }
     } catch (err) {
-        console.error("读取云端排序失败，降级使用默认排序:", err);
+        console.error("读取云端偏好失败，降级使用默认排序:", err);
     }
 
     toolListContainer.innerHTML = "";
 
-    // B. 根据云端时间戳大小进行聪明排序
+    // B. 【黄金排序规则】：优先比对是否置顶(is_pinned)，若相同则比对最后打开时间(last_opened_at)
     const sortedTools = [...Tools].sort((a, b) => {
-        const timeA = supabaseLastOpened[a.id] || 0;
-        const timeB = supabaseLastOpened[b.id] || 0;
-        return timeB - timeA; // 最近打开的排在最上面
+        const prefA = prefsMap[a.id] || { isPinned: false, lastOpened: 0 };
+        const prefB = prefsMap[b.id] || { isPinned: false, lastOpened: 0 };
+
+        // 1. 先比置顶状态 (true 强制排前面)
+        if (prefA.isPinned !== prefB.isPinned) {
+            return prefB.isPinned - prefA.isPinned;
+        }
+        // 2. 再比最后打开时间 (时间戳大的排前面)
+        return prefB.lastOpened - prefA.lastOpened;
     });
 
-    // C. 开始一行一行编织排序后的新卡片
+    // C. 开始一行一行编织排序后的新横线卡片
     sortedTools.forEach(tool => {
         const cardAnchor = document.createElement("a");
         cardAnchor.className = "tool-card";
         cardAnchor.href = tool.url; 
 
         // ── 核心云端交互埋点 ──
-        // 当用户点击这张卡片时，不仅要跳走，还要立刻把这一秒的时间戳异步同步回 Supabase 云端数据库
-        cardAnchor.addEventListener("click", async (e) => {
-            // 更新本地数据准备上传
-            supabaseLastOpened[tool.id] = Date.now();
-            
-            // 悄悄发送给 Supabase，不阻碍用户点击跳转的流畅感
-            db.from("profiles")
+        // 当用户点击卡片进入工具时，向全新的 tool_prefs 表实时记录/更新时间
+        cardAnchor.addEventListener("click", () => {
+            db.from("tool_prefs")
               .upsert({ 
-                  id: user.id, 
-                  last_opened: supabaseLastOpened 
-              })
+                  user_id: user.id, 
+                  tool_id: tool.id,
+                  last_opened_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+              }, { onConflict: 'user_id,tool_id' }) // 基于联合唯一约束进行精准冲突覆盖
               .then(({ error }) => {
-                  if (error) console.error("同步云端时间失败:", error);
+                  if (error) console.error("同步工具打开时间失败:", error);
               });
         });
 
@@ -107,7 +116,10 @@ async function renderWorkspaceToolsFromSupabase(user) {
         const textWrapper = document.createElement("div");
 
         const toolTitle = document.createElement("h2");
-        toolTitle.textContent = `${tool.icon} ${tool.name}`; 
+        
+        // 💡 视觉预留：如果是置顶工具，前面会优雅地多出一枚 📌 标志
+        const isPinned = prefsMap[tool.id]?.isPinned;
+        toolTitle.textContent = `${isPinned ? '📌 ' : ''}${tool.icon} ${tool.name}`; 
 
         const toolSubtitle = document.createElement("p");
         toolSubtitle.textContent = tool.subtitle; 
