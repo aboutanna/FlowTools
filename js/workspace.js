@@ -1,6 +1,6 @@
 /* ==========================================================================
-   FlowTools - Workspace Core Logic (Phase 4 - Light Tool Preferences)
-   ========================================================================== */
+   FlowTools - Workspace Core Logic (Phase 4 - Precision Cloud Sorting)
+   ========================================================================= */
 
 import Tools from './tools.js';
 
@@ -46,7 +46,7 @@ function updateGreeting() {
 }
 
 /**
- * 【架构升级】全面对接 tool_prefs 表的聪明排序渲染中心
+ * 全面对接 tool_prefs 表的聪明排序渲染中心
  */
 async function renderWorkspaceToolsFromPrefs(user) {
     const toolListContainer = document.getElementById("toolList");
@@ -97,19 +97,26 @@ async function renderWorkspaceToolsFromPrefs(user) {
         cardAnchor.className = "tool-card";
         cardAnchor.href = tool.url; 
 
-        // ── 核心云端交互埋点 ──
-        // 当用户点击卡片进入工具时，向全新的 tool_prefs 表实时记录/更新时间
-        cardAnchor.addEventListener("click", () => {
-            db.from("tool_prefs")
-              .upsert({ 
-                  user_id: user.id, 
-                  tool_id: tool.id,
-                  last_opened_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString()
-              }, { onConflict: 'user_id,tool_id' }) // 基于联合唯一约束进行精准冲突覆盖
-              .then(({ error }) => {
-                  if (error) console.error("同步工具打开时间失败:", error);
-              });
+        // ── 核心云端交互埋点（精准升级修正版） ──
+        // 💡 必须引入事件参数 e，强行锁定跳转时机
+        cardAnchor.addEventListener("click", async (e) => {
+            e.preventDefault(); // 1. 先按下暂停键，不让页面瞬间跳走
+
+            try {
+                // 2. 稳稳当当地向 Supabase 发送并写入当前这一秒的时间戳
+                await db.from("tool_prefs")
+                  .upsert({ 
+                      user_id: user.id, 
+                      tool_id: tool.id,
+                      last_opened_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString()
+                  }, { onConflict: 'user_id,tool_id' });
+            } catch (error) {
+                console.error("同步工具打开时间失败:", error);
+            } finally {
+                // 3. 云端收到了（或者发生意外了），这时候再安全放行，顺滑执行跳转！
+                window.location.href = tool.url;
+            }
         });
 
         // 编织卡片内部的文本区域
@@ -117,7 +124,7 @@ async function renderWorkspaceToolsFromPrefs(user) {
 
         const toolTitle = document.createElement("h2");
         
-        // 💡 视觉预留：如果是置顶工具，前面会优雅地多出一枚 📌 标志
+        // 视觉预留：如果是置顶工具，前面会优雅地多出一枚 📌 标志
         const isPinned = prefsMap[tool.id]?.isPinned;
         toolTitle.textContent = `${isPinned ? '📌 ' : ''}${tool.icon} ${tool.name}`; 
 
