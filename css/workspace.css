@@ -131,3 +131,42 @@ footer {
 #settingsBtn:active, #logoutBtn:active {
     transform: none !important;         /* 强行压制任何点击下沉动效 */
 }
+/* ==========================================================================
+   Muji Style Action Menu (Phase 5 - Pin Popup)
+   ========================================================================== */
+.card-container {
+    position: relative; /* 为弹出菜单提供定位基准 */
+}
+
+.pin-menu {
+    position: absolute;
+    right: 0;
+    top: 50px;
+    background: #faf9f7;               /* 完美契合温暖的纸张底色 */
+    border: 1px solid #E8E5DF;          /* 采用纯正的笔记本直角细格线 */
+    padding: 6px 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    min-width: 100px;
+}
+
+.menu-item {
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    color: #4f4f4f !important;
+    font-size: 13px !important;
+    padding: 8px 16px !important;
+    text-align: left;
+    cursor: pointer;
+    width: 100% !important;
+    transition: background-color 0.2s ease;
+}
+
+/* 鼠标悬停在菜单项上时，极其温柔地泛起植物灰绿 */
+.menu-item:hover {
+    background-color: #D8E6DB !important;
+    transform: none !important; /* 坚决压制跳动 */
+}

@@ -1,19 +1,19 @@
 /* ==========================================================================
-   FlowTools - Workspace Core Logic (Phase 4 - Precision Cloud Sorting)
+   FlowTools - Workspace Core Logic (Phase 5 - Cloud Pinning System)
    ========================================================================= */
 
 import Tools from './tools.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    // 1. 身份状态守卫（获取当前登录的真用户）
+    // 1. 身份状态守卫
     const user = await Auth.requireLogin();
     if (!user) return;
 
     // 2. 激活动态问候语
     updateGreeting();
 
-    // 3. 【第四阶段核心】从全新极简表 tool_prefs 读取数据并自动排版卡片
+    // 3. 【第五阶段核心】全加载并激活带 Pin 交互的云端数据排版
     await renderWorkspaceToolsFromPrefs(user);
 
     // 4. 绑定安全退出事件
@@ -23,6 +23,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             await Auth.logout();
         });
     }
+
+    // 点击页面任意空白处，悄悄收起可能打开的置顶小菜单
+    document.addEventListener("click", () => {
+        const activeMenu = document.querySelector(".pin-menu");
+        if (activeMenu) activeMenu.remove();
+    });
 
 });
 
@@ -46,7 +52,7 @@ function updateGreeting() {
 }
 
 /**
- * 全面对接 tool_prefs 表的聪明排序渲染中心
+ * 【第五阶段核心】对接 tool_prefs 表的“Pin + 时间”双轨排序渲染中心
  */
 async function renderWorkspaceToolsFromPrefs(user) {
     const toolListContainer = document.getElementById("toolList");
@@ -57,14 +63,13 @@ async function renderWorkspaceToolsFromPrefs(user) {
     let prefsMap = {};
 
     try {
-        // A. 联网拉取当前用户在 tool_prefs 表里的所有工具偏好记录
+        // A. 联网向 Supabase 索要当前用户的全部置顶与时间记录
         const { data, error } = await db
             .from("tool_prefs")
             .select("tool_id, is_pinned, last_opened_at")
             .eq("user_id", user.id);
 
         if (data) {
-            // 将数组扁平化存入地图，方便后续快速比对排序
             data.forEach(pref => {
                 prefsMap[pref.tool_id] = {
                     isPinned: pref.is_pinned,
@@ -78,53 +83,54 @@ async function renderWorkspaceToolsFromPrefs(user) {
 
     toolListContainer.innerHTML = "";
 
-    // B. 【黄金排序规则】：优先比对是否置顶(is_pinned)，若相同则比对最后打开时间(last_opened_at)
+    // B. 【黄金双轨排序】：置顶永远无条件压制时间，时间只在同状态内比大小
     const sortedTools = [...Tools].sort((a, b) => {
         const prefA = prefsMap[a.id] || { isPinned: false, lastOpened: 0 };
         const prefB = prefsMap[b.id] || { isPinned: false, lastOpened: 0 };
 
-        // 1. 先比置顶状态 (true 强制排前面)
         if (prefA.isPinned !== prefB.isPinned) {
-            return prefB.isPinned - prefA.isPinned;
+            return prefB.isPinned - prefA.isPinned; // true (1) 比 false (0) 靠前
         }
-        // 2. 再比最后打开时间 (时间戳大的排前面)
-        return prefB.lastOpened - prefA.lastOpened;
+        return prefB.lastOpened - prefA.lastOpened; // 最近打开的靠前
     });
 
-    // C. 开始一行一行编织排序后的新横线卡片
+    // C. 编织新卡片
     sortedTools.forEach(tool => {
+        // 为了防止菜单溢出，加一层包裹容器
+        const cardContainer = document.createElement("div");
+        cardContainer.className = "card-container";
+
         const cardAnchor = document.createElement("a");
         cardAnchor.className = "tool-card";
         cardAnchor.href = tool.url; 
 
-        // ── 核心云端交互埋点（精准升级修正版） ──
-        // 💡 必须引入事件参数 e，强行锁定跳转时机
+        // 点击工具卡片主体（排除菜单按钮）触发时间戳踩点
         cardAnchor.addEventListener("click", async (e) => {
-            e.preventDefault(); // 1. 先按下暂停键，不让页面瞬间跳走
-
+            // 如果点到的是三个点，不要触发页面跳转
+            if (e.target.classList.contains("menu-btn")) return;
+            
+            e.preventDefault(); 
             try {
-                // 2. 稳稳当当地向 Supabase 发送并写入当前这一秒的时间戳
+                const currentPinned = prefsMap[tool.id]?.isPinned || false;
                 await db.from("tool_prefs")
                   .upsert({ 
                       user_id: user.id, 
                       tool_id: tool.id,
+                      is_pinned: currentPinned, // 保持原有的置顶状态不被冲掉
                       last_opened_at: new Date().toISOString(),
                       updated_at: new Date().toISOString()
                   }, { onConflict: 'user_id,tool_id' });
             } catch (error) {
                 console.error("同步工具打开时间失败:", error);
             } finally {
-                // 3. 云端收到了（或者发生意外了），这时候再安全放行，顺滑执行跳转！
                 window.location.href = tool.url;
             }
         });
 
-        // 编织卡片内部的文本区域
+        // 编织卡片内文字区域
         const textWrapper = document.createElement("div");
-
         const toolTitle = document.createElement("h2");
         
-        // 视觉预留：如果是置顶工具，前面会优雅地多出一枚 📌 标志
         const isPinned = prefsMap[tool.id]?.isPinned;
         toolTitle.textContent = `${isPinned ? '📌 ' : ''}${tool.icon} ${tool.name}`; 
 
@@ -134,13 +140,62 @@ async function renderWorkspaceToolsFromPrefs(user) {
         textWrapper.appendChild(toolTitle);
         textWrapper.appendChild(toolSubtitle);
 
+        // 创建右侧那颗安静内敛的三个点 ⋯ 菜单按钮
         const menuButton = document.createElement("button");
         menuButton.className = "menu-btn";
         menuButton.textContent = "⋯";
 
+        // ── 【第五阶段核心交互】弹出菜单与云端 Pin 状态切换 ──
+        menuButton.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation(); // 阻断点击传递，防止被最外层直接关闭
+
+            // 如果已经有菜单打开了，先删掉它
+            const existingMenu = document.querySelector(".pin-menu");
+            if (existingMenu) existingMenu.remove();
+
+            // 生成轻量纸面小菜单
+            const pinMenu = document.createElement("div");
+            pinMenu.className = "pin-menu";
+
+            const pinActionItem = document.createElement("button");
+            pinActionItem.className = "menu-item";
+            // 聪明识别当前状态，动态提供切换文本
+            pinActionItem.textContent = isPinned ? "Unpin (取消置顶)" : "Pin (置顶)";
+
+            // 绑定真正的云端改值动作
+            pinActionItem.addEventListener("click", async (actionEvent) => {
+                actionEvent.stopPropagation();
+                pinMenu.remove(); // 迅速收起菜单
+
+                const currentOpened = prefsMap[tool.id]?.lastOpened ? new Date(prefsMap[tool.id].lastOpened).toISOString() : null;
+
+                // 直接命令 Supabase 翻转当前的置顶状态
+                const { error } = await db.from("tool_prefs")
+                    .upsert({
+                        user_id: user.id,
+                        tool_id: tool.id,
+                        is_pinned: !isPinned, // 状态直接取反！
+                        last_opened_at: currentOpened, // 锁定原有的时间戳
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,tool_id' });
+
+                if (!error) {
+                    // 云端改完后，无刷实时重新排版整个大厅！
+                    await renderWorkspaceToolsFromPrefs(user);
+                } else {
+                    console.error("置顶操作失败:", error);
+                }
+            });
+
+            pinMenu.appendChild(pinActionItem);
+            cardContainer.appendChild(pinMenu);
+        });
+
         cardAnchor.appendChild(textWrapper);
         cardAnchor.appendChild(menuButton);
+        cardContainer.appendChild(cardAnchor);
 
-        toolListContainer.appendChild(cardAnchor);
+        toolListContainer.appendChild(cardContainer);
     });
 }
