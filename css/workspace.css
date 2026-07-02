@@ -1,92 +1,84 @@
-body{
-
-    margin:0;
-
-    background:#faf9f7;
-
-    color:#4f4f4f;
-
-    font-family:-apple-system,BlinkMacSystemFont,
-        "SF Pro Display","Helvetica Neue",sans-serif;
-
-}
-
-.workspace{
-
-    width:min(720px,92%);
-
-    margin:70px auto;
-
-}
-
-header{
-
-    margin-bottom:48px;
-
-}
-
-header h1{
-
-    font-size:36px;
-
-    font-weight:600;
-
-    margin:0;
-
-}
-
-#greeting{
-
-    color:#8b8b8b;
-
-    margin-top:12px;
-
-    font-size:18px;
-
-}
 /* ==========================================================================
-   中间工具卡片 Muji 格线化微调
+   FlowTools - Workspace Stylesheet (Muji Minimalism Edition)
+   ========================================================================== */
+
+/* 1. 基础页面排版与纸张质感 */
+body {
+    margin: 0;
+    background: #faf9f7; /* 略带温暖的纸张底色 */
+    color: #4f4f4f;      /* 舒适的深灰文本色 */
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+}
+
+.workspace {
+    width: min(720px, 92%); /* 限制最大宽度，像本子一样的边界感 */
+    margin: 70px auto;      /* 页面上下留出充足的空白呼吸感 */
+}
+
+header {
+    margin-bottom: 48px;
+}
+
+header h1 {
+    font-size: 36px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+#greeting {
+    color: #8b8b8b;
+    margin-top: 12px;
+    font-size: 18px;
+    font-weight: 300;
+}
+
+/* ==========================================================================
+   2. 中间工具卡片 - Muji 笔记本纸面格线化
    ========================================================================== */
 #toolList {
     display: flex;
-    flex-direction: column; /* 让卡片像笔记本的行一样垂直排列 */
+    flex-direction: column; /* 让卡片像本子的行一样垂直排列 */
 }
 
 .tool-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px 0;                  /* 上下留出优雅的间距 */
-    background: none !important;      /* 彻底白底，去掉卡片的白色背景块 */
-    border-radius: 0 !important;      /* 彻底干掉大圆角，变成纯粹的直角线 */
-    box-shadow: none !important;      /* 彻底剥离厚重的阴影 */
-    border-bottom: 1px solid #E8E5DF; /* 用 theme.css 里的浅灰边框作为纸张格线 */
-    transition: border-color 0.25s ease, padding-left 0.25s ease; /* 丝滑的边缘变色动效 */
+    padding: 24px 0;                  /* 自然的上下行距 */
+    text-decoration: none;            /* 清除自带链接下划线 */
+    color: inherit;
+    background: none !important;      /* 彻底剥离厚重的白色背景块 */
+    border-radius: 0 !important;      /* 彻底干掉圆角，回归纯直角横线 */
+    box-shadow: none !important;      /* 彻底剥离多余的阴影质感 */
+    border-bottom: 1px solid #E8E5DF; /* 用最浅的纸张灰作为底线 */
+    transition: border-color 0.25s ease, padding-left 0.25s ease; /* 丝滑变色过渡 */
 }
 
-/* 最后一个卡片去掉底部底线，让排版更干净 */
+/* 最后一个卡片维持横线，保持与下方页脚的自然分隔 */
 .tool-card:last-child {
-    border-bottom: 1px solid #E8E5DF; /* 如果你想保持 Settings 上方有线可以留着，或者改成 none */
+    border-bottom: 1px solid #E8E5DF;
 }
 
-/* 卡片内文字样式微调 */
+/* 卡片内文本印刷体级精修 */
 .tool-card h2 {
     font-size: 16px;
-    font-weight: 400; /* 字重变轻，更显儒雅 */
+    font-weight: 400; /* 调轻字重，显得轻盈、儒雅 */
     color: #4f4f4f;
-    margin: 0 0 4px 0;
+    margin: 0 0 6px 0;
 }
 
 .tool-card p {
     font-size: 13px;
-    color: #8b8b8b; /* 状态文字变成柔和的灰色 */
+    color: #8b8b8b; /* 动态假数据变为温柔的浅灰 */
+    margin: 0;
 }
 
-/* 隐藏右侧原有的厚重小按钮，改成优雅的三个点 */
+/* 工具卡片右侧原本的厚重按钮，驯服成优雅精致的三个点 ⋯ */
 .menu-btn {
     background: none !important;
     border: none !important;
-    color: #cccccc !important;
+    color: #cccccc !important; /* 默认状态极浅，不争夺视线 */
     font-size: 16px;
     padding: 0;
     width: auto !important;
@@ -94,14 +86,48 @@ header h1{
     transition: color 0.25s ease;
 }
 
-/* ==========================================================================
-   关键交互：鼠标移入时，底线轻轻变成植物灰绿 #D8E6DB
-   ========================================================================== */
+/* ── 关键卡片交互 ──
+   鼠标移入时，底线静悄悄地换成目标的柔和植物灰绿，没有任何发光与跳动 */
 .tool-card:hover {
-    border-color: #D8E6DB !important; /* 底线静悄悄地换色 */
-    padding-left: 4px;                /* 极其轻微的向右呼吸感 */
+    border-color: #D8E6DB !important; /* 柔和泛起植物灰绿 */
+    padding-left: 4px;                /* 极其轻微、内敛的向右位移呼吸感 */
 }
 
 .tool-card:hover .menu-btn {
-    color: #8b8b8b !important;        /* 三个点也轻轻亮起 */
+    color: #8b8b8b !important;        /* 三个点在悬停时也轻轻亮起 */
+}
+
+/* ==========================================================================
+   3. 底部页脚标签 - 彻底剥离厚重外壳，变为纸面印刷文字
+   ========================================================================== */
+footer {
+    display: flex;
+    gap: 24px;
+    margin-top: 60px;
+    padding: 0;
+    background: none;
+}
+
+#settingsBtn, #logoutBtn {
+    width: auto !important;             /* 强行缩回文字实际宽度，不撑满整行 */
+    padding: 0 !important;              /* 强行剥离按钮厚重的内边距 */
+    background: transparent !important;    /* 彻底透明底色 */
+    border: none !important;            /* 彻底拿掉边框线 */
+    border-radius: 0 !important;        /* 彻底消除任何圆角 */
+    box-shadow: none !important;        /* 彻底扔掉阴影 */
+    color: #8b8b8b !important;          /* 变为安静折叠在角落的边缘灰色小字 */
+    font-size: 14px !important;         /* 字号收小，尽显内敛 */
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: color 0.25s ease;
+}
+
+/* 彻底封印任何形式的上下跳动与物理位移，仅保留纸张文字在光线下的变色感 */
+#settingsBtn:hover, #logoutBtn:hover {
+    transform: none !important;         /* 强行压制原系统的悬浮和升降位移 */
+    color: #4f4f4f !important;          /* 悬停时字色轻轻变深，提供清晰交互 */
+}
+
+#settingsBtn:active, #logoutBtn:active {
+    transform: none !important;         /* 强行压制任何点击下沉动效 */
 }
