@@ -132,7 +132,7 @@ async function renderWorkspaceToolsFromPrefs(user) {
         const toolTitle = document.createElement("h2");
         
         const isPinned = prefsMap[tool.id]?.isPinned;
-        toolTitle.textContent = `${isPinned ? '📌 ' : ''}${tool.icon} ${tool.name}`; 
+        toolTitle.textContent = `${isPinned ? '⚲ ' : ''}${tool.icon} ${tool.name}`; 
 
         const toolSubtitle = document.createElement("p");
         toolSubtitle.textContent = tool.subtitle; 
