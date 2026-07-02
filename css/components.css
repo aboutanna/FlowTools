@@ -1,0 +1,119 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    font-family:var(--font);
+
+    background:var(--bg);
+
+    color:var(--text);
+
+}
+
+input{
+
+    width:100%;
+
+    padding:14px 16px;
+
+    border:1px solid var(--border);
+
+    border-radius:var(--radius);
+
+    background:var(--input);
+
+    color:var(--text);
+
+    font-size:16px;
+
+    transition:var(--transition);
+
+}
+
+input:focus{
+
+    outline:none;
+
+    background:white;
+
+    border-color:var(--primary);
+
+}
+
+button{
+
+    width:100%;
+
+    padding:14px;
+
+    border:none;
+
+    border-radius:var(--radius);
+
+    cursor:pointer;
+
+    font-size:16px;
+
+    transition:var(--transition);
+
+}
+
+button:hover{
+
+    transform:translateY(-1px);
+
+}
+
+button:active{
+
+    transform:translateY(1px);
+
+}
+
+/* 主按钮 */
+
+.btn-primary{
+
+    background:var(--primary);
+
+    color:white;
+
+}
+
+.btn-primary:hover{
+
+    background:var(--primary-hover);
+
+}
+
+/* 次按钮 */
+
+.btn-secondary{
+
+    background:#ECE7DF;
+
+    color:#666;
+
+}
+
+.btn-secondary:hover{
+
+    background:#E2DDD5;
+
+}
+
+/* 卡片 */
+
+.card{
+
+    background:var(--card);
+
+    border-radius:var(--radius-large);
+
+    box-shadow:var(--shadow);
+
+}

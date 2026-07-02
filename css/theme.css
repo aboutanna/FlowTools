@@ -1,0 +1,52 @@
+:root{
+
+    /* ========= 品牌色 ========= */
+
+    --primary:#B89C7D;
+    --primary-hover:#A98A67;
+
+    /* ========= 页面 ========= */
+
+    --bg:#F7F5F2;
+    --card:#FFFFFF;
+    --input:#FAFAF8;
+
+    /* ========= 字体 ========= */
+
+    --text:#505050;
+    --text-light:#8A8A8A;
+
+    /* ========= 边框 ========= */
+
+    --border:#E8E5DF;
+
+    /* ========= 状态 ========= */
+
+    --success:#6F9278;
+    --warning:#D5A861;
+    --danger:#C96969;
+
+    /* ========= 圆角 ========= */
+
+    --radius-small:10px;
+    --radius:16px;
+    --radius-large:24px;
+
+    /* ========= 阴影 ========= */
+
+    --shadow:
+        0 8px 30px rgba(0,0,0,.05);
+
+    /* ========= 动画 ========= */
+
+    --transition:.25s;
+
+    /* ========= 字体 ========= */
+
+    --font:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+}

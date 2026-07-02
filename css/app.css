@@ -1,0 +1,73 @@
+body{
+
+    min-height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    padding:40px;
+
+}
+
+.login-container{
+
+    width:420px;
+
+    padding:45px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+}
+
+.login-container h1{
+
+    font-size:34px;
+
+    font-weight:600;
+
+}
+
+.login-container p{
+
+    color:var(--text-light);
+
+    line-height:1.6;
+
+}
+.logo{
+
+    width:72px;
+
+    height:72px;
+
+    margin:0 auto 10px;
+
+    border-radius:50%;
+
+    background:#EFE8DE;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:34px;
+
+}
+#message{
+
+    min-height:22px;
+
+    color:var(--danger);
+
+    font-size:14px;
+
+}
