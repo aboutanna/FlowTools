@@ -44,3 +44,64 @@ header h1{
     font-size:18px;
 
 }
+/* ==========================================================================
+   中间工具卡片 Muji 格线化微调
+   ========================================================================== */
+#toolList {
+    display: flex;
+    flex-direction: column; /* 让卡片像笔记本的行一样垂直排列 */
+}
+
+.tool-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0;                  /* 上下留出优雅的间距 */
+    background: none !important;      /* 彻底白底，去掉卡片的白色背景块 */
+    border-radius: 0 !important;      /* 彻底干掉大圆角，变成纯粹的直角线 */
+    box-shadow: none !important;      /* 彻底剥离厚重的阴影 */
+    border-bottom: 1px solid #E8E5DF; /* 用 theme.css 里的浅灰边框作为纸张格线 */
+    transition: border-color 0.25s ease, padding-left 0.25s ease; /* 丝滑的边缘变色动效 */
+}
+
+/* 最后一个卡片去掉底部底线，让排版更干净 */
+.tool-card:last-child {
+    border-bottom: 1px solid #E8E5DF; /* 如果你想保持 Settings 上方有线可以留着，或者改成 none */
+}
+
+/* 卡片内文字样式微调 */
+.tool-card h2 {
+    font-size: 16px;
+    font-weight: 400; /* 字重变轻，更显儒雅 */
+    color: #4f4f4f;
+    margin: 0 0 4px 0;
+}
+
+.tool-card p {
+    font-size: 13px;
+    color: #8b8b8b; /* 状态文字变成柔和的灰色 */
+}
+
+/* 隐藏右侧原有的厚重小按钮，改成优雅的三个点 */
+.menu-btn {
+    background: none !important;
+    border: none !important;
+    color: #cccccc !important;
+    font-size: 16px;
+    padding: 0;
+    width: auto !important;
+    cursor: pointer;
+    transition: color 0.25s ease;
+}
+
+/* ==========================================================================
+   关键交互：鼠标移入时，底线轻轻变成植物灰绿 #D8E6DB
+   ========================================================================== */
+.tool-card:hover {
+    border-color: #D8E6DB !important; /* 底线静悄悄地换色 */
+    padding-left: 4px;                /* 极其轻微的向右呼吸感 */
+}
+
+.tool-card:hover .menu-btn {
+    color: #8b8b8b !important;        /* 三个点也轻轻亮起 */
+}
