@@ -66,7 +66,7 @@ input[type="text"], input[type="datetime-local"], input[type="date"] {
     background: #ffffff;
     border: 1px solid var(--line-color);
     padding: 10px 12px;
-    border-radius: 0 !important; /* 坚决拔除圆角 */
+    border-radius: 0 !important; /* 拔除圆角 */
     color: var(--muji-gray);
     font-size: 14px;
     outline: none;

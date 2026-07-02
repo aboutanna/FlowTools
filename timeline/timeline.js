@@ -1,5 +1,5 @@
 /* ==========================================================================
-   FlowTools - Timeline Module Core Logic (Phase 1-2 Security Box)
+   FlowTools - Timeline Module Core Logic (Phase 3-4 Supabase Cloud Edition)
    ========================================================================== */
 
 let memoData = [];
@@ -8,7 +8,7 @@ let selectedFilterDate = null;
 document.addEventListener("DOMContentLoaded", async () => {
     // 🔒 1. 房间通行证双重守卫
     const user = await Auth.requireLogin();
-    if (!user) return; // 未登录用户会被安全库当场拦截抛回主页
+    if (!user) return; // 未登录用户会被安全库拦截
 
     // 2. 抓取页面元素组件
     const memoInput = document.getElementById('memo-input');
@@ -21,18 +21,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     const auditReport = document.getElementById('audit-report');
     const emptyState = document.getElementById('empty-state');
 
-    // 3. 数据层：倒序重排（后来居上）
-    function loadAndSortData() {
-        memoData = JSON.parse(localStorage.getItem('timeline_memos_v3')) || [];
-        memoData.sort((a, b) => b.timestamp - a.timestamp);
-    }
-    loadAndSortData();
+    // 3. 【云端核心 A】联网从 Supabase 加载当前用户的时间轴数据
+    async function loadCloudData() {
+        try {
+            auditReport.innerText = "正在同步云端时间账本...";
+            
+            // 💡 享受极其强大的 RLS 安全红利：数据库会自动隔离用户数据
+            const { data, error } = await db
+                .from("timeline_memos")
+                .select("id, text, timestamp")
+                .order("timestamp", { ascending: false }); // 倒序，时间最新的“后来居上”排在前面 [cite: 487]
 
-    function runTimeAudit() {
-        auditReport.innerText = "Timeline / 相对等距行线沙盒。";
+            if (error) throw error;
+            memoData = data || [];
+        } catch (err) {
+            console.error("加载云端数据失败:", err);
+            auditReport.innerText = "⚠️ 联网同步失败，正在尝试读取本地缓存...";
+            // 降级守卫：万一断网，拉取本地暂存作为防御缓冲 
+            memoData = JSON.parse(localStorage.getItem('timeline_memos_v3')) || [];
+            memoData.sort((a, b) => b.timestamp - a.timestamp);
+        }
     }
 
-    // 4. 渲染层：编织横线时序
+    function updateAuditText() {
+        auditReport.innerText = `Timeline / 相对等距行线沙盒。当前已云端同步 ${memoData.length} 条记录。`;
+    }
+
+    // 4. 渲染层：编织无色系 Muji 横线时序
     function renderTimeline() {
         nodesLayer.innerHTML = '';
         emptyState.style.display = 'none';
@@ -47,6 +62,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (renderedList.length === 0) {
             if (selectedFilterDate) emptyState.style.display = 'block';
+            updateAuditText();
             return;
         }
 
@@ -77,10 +93,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             nodesLayer.appendChild(wrapper);
         });
+        
+        updateAuditText();
     }
 
-    // 5. 交互层：织入新数据
-    function injectMemo() {
+    // 5. 【云端核心 B】织入新数据并实时同步到 Supabase 
+    async function injectMemo() {
         const text = memoInput.value.trim();
         if (!text) return;
 
@@ -89,23 +107,42 @@ document.addEventListener("DOMContentLoaded", async () => {
             targetTimestamp = new Date(backdateInput.value).getTime();
         }
 
-        const newMemo = {
-            id: 'memo_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(),
-            text: text,
-            timestamp: targetTimestamp
-        };
+        const newId = 'memo_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
 
-        memoData.push(newMemo);
-        localStorage.setItem('timeline_memos_v3', JSON.stringify(memoData));
-        
-        memoInput.value = '';
-        backdateInput.value = '';
-        loadAndSortData();
-        renderTimeline();
+        // 强力挂起输入框按钮，防止短时间内二次点击产生错乱 [cite: 421]
+        addBtn.disabled = true;
+        addBtn.innerText = "织入中...";
+
+        try {
+            // 向 Supabase 云端数据表发起插入指令
+            const { error } = await db.from("timeline_memos").insert({
+                id: newId,
+                user_id: user.id, // 强绑定当前用户
+                text: text,
+                timestamp: targetTimestamp
+            });
+
+            if (error) throw error;
+
+            // 成功后清空输入框，重新拉取并渲染数据
+            memoInput.value = '';
+            backdateInput.value = '';
+            
+            await loadCloudData();
+            localStorage.setItem('timeline_memos_v3', JSON.stringify(memoData)); // 本地留一份备份作双保险
+            renderTimeline();
+
+        } catch (err) {
+            console.error("同步至云端失败:", err);
+            alert("织入轴线失败，请确认您在 Supabase 中是否为 timeline_memos 表配置好了对应的 RLS Policy 安全策略。");
+        } finally {
+            addBtn.disabled = false;
+            addBtn.innerText = "织入轴线";
+        }
     }
 
-    // 6. 核心交互：冒泡拦截抹除与二次确认
-    nodesLayer.addEventListener('click', (e) => {
+    // 6. 【云端核心 C】冒泡拦截，从云端彻底抹除记录 
+    nodesLayer.addEventListener('click', async (e) => {
         const targetId = e.target.getAttribute('data-id');
         if (!targetId) return;
 
@@ -130,12 +167,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (e.target.classList.contains('btn-yes')) {
             const wrapper = document.getElementById(`node-wrapper-${targetId}`);
             if (wrapper) {
+                // 先执行纸张优雅消散的动效
                 wrapper.classList.add('dissolving');
-                wrapper.addEventListener('animationend', () => {
-                    memoData = memoData.filter(memo => memo.id !== targetId);
-                    localStorage.setItem('timeline_memos_v3', JSON.stringify(memoData));
-                    loadAndSortData();
-                    renderTimeline();
+                
+                wrapper.addEventListener('animationend', async () => {
+                    try {
+                        // 特效结束后，从 Supabase 云端删掉它
+                        const { error } = await db
+                            .from("timeline_memos")
+                            .delete()
+                            .eq("id", targetId);
+
+                        if (error) throw error;
+
+                        // 云端删除成功后重刷内存
+                        memoData = memoData.filter(memo => memo.id !== targetId);
+                        localStorage.setItem('timeline_memos_v3', JSON.stringify(memoData));
+                        renderTimeline();
+                    } catch (err) {
+                        console.error("云端抹除失败:", err);
+                        alert("云端删除失败，请刷新重试。");
+                        await loadCloudData();
+                        renderTimeline();
+                    }
                 });
             }
         }
@@ -158,8 +212,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     addBtn.addEventListener('click', injectMemo);
     memoInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') injectMemo(); });
 
-    // 8. 初始化装配启动
-    runTimeAudit();
+    // 8. 自动初始化
+    await loadCloudData();
     renderTimeline();
 });
 
