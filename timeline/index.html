@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline - FlowTools</title>
+    <link rel="stylesheet" href="timeline.css">
+</head>
+<body>
+
+    <div id="top-panel">
+        <a href="../workspace.html" class="back-link">⚲ 返回大厅 (Workspace)</a>
+        <div id="audit-report">正在加载本地时间账本...</div>
+        
+        <div class="control-row">
+            <input type="text" id="memo-input" placeholder="输入记录内容..." maxlength="150">
+            <input type="datetime-local" id="backdate-input" title="补录历史时间">
+            <button id="add-btn">织入轴线</button>
+        </div>
+
+        <div class="control-row" style="margin-bottom: 0; padding-top: 8px;">
+            <label>按日期过滤：</label>
+            <input type="date" id="filter-date-input">
+            <button id="filter-btn" class="filter-btn">跳转定位</button>
+            <button id="reset-btn" class="filter-btn" style="color: var(--muji-light);">显示全量</button>
+        </div>
+    </div>
+
+    <div id="timeline-container">
+        <div id="timeline-wire"></div>
+        <div id="nodes-layer"></div>
+        <div id="empty-state">该日期内没有任何记录。</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+
+    <script type="module" src="timeline.js"></script>
+</body>
+</html>

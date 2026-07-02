@@ -1,0 +1,257 @@
+/* ==========================================================================
+   FlowTools - Timeline Module Style (Muji Sheet Edition)
+   ========================================================================== */
+:root {
+    --muji-gray: #4f4f4f;       /* 核心深灰书写字 */
+    --muji-light: #8b8b8b;      /* 辅助浅灰小字 */
+    --paper-bg: #faf9f7;        /* 温暖的纸张底色 */
+    --line-color: #E8E5DF;      /* 笔记本格线灰 */
+    --plant-green: #D8E6DB;     /* 唯一的低饱和度植物灰绿 */
+    --danger-red: #c96b6b;      /* 极度克制的消退红 */
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--paper-bg);
+    color: var(--muji-gray);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* 顶部综合控制面板 */
+#top-panel {
+    width: min(650px, 90%);
+    margin-top: 50px;
+    padding: 20px 0;
+    background: transparent;
+    border-bottom: 1px solid var(--line-color);
+}
+
+.back-link {
+    display: inline-block;
+    text-decoration: none;
+    color: var(--muji-light);
+    font-size: 13px;
+    margin-bottom: 16px;
+    transition: color 0.25s ease;
+}
+.back-link:hover {
+    color: var(--muji-gray);
+}
+
+#audit-report {
+    font-size: 13px;
+    color: var(--muji-light);
+    line-height: 1.6;
+    margin-bottom: 20px;
+    border-left: 2px solid var(--muji-light);
+    padding-left: 10px;
+}
+
+.control-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: center;
+}
+
+/* 输入框高定 */
+input[type="text"], input[type="datetime-local"], input[type="date"] {
+    background: #ffffff;
+    border: 1px solid var(--line-color);
+    padding: 10px 12px;
+    border-radius: 0 !important; /* 坚决拔除圆角 */
+    color: var(--muji-gray);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.25s ease;
+    box-sizing: border-box;
+}
+input[type="text"]:focus, input[type="datetime-local"]:focus, input[type="date"]:focus {
+    border-color: var(--muji-light);
+}
+
+input[type="text"] { flex: 2; min-width: 200px; }
+input[type="datetime-local"] { flex: 1; min-width: 150px; }
+input[type="date"] { background: #ffffff; }
+
+label {
+    font-size: 13px;
+    color: var(--muji-light);
+}
+
+/* 按钮高定 - 植物灰绿微弱反馈 */
+button {
+    background: #ffffff;
+    color: var(--muji-gray);
+    border: 1px solid var(--line-color);
+    padding: 10px 18px;
+    border-radius: 0 !important;
+    cursor: pointer;
+    font-weight: 400;
+    font-size: 13px;
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+button:hover {
+    background-color: var(--plant-green);
+    border-color: var(--plant-green);
+}
+button:active {
+    transform: none !important;
+}
+
+.filter-btn { background: #ffffff; }
+
+/* 时间轴主轴线 */
+#timeline-container {
+    position: relative;
+    width: 100%;
+    max-width: 650px;
+    margin-top: 40px;
+    padding-bottom: 100px;
+}
+
+#timeline-wire {
+    position: absolute;
+    left: 120px; 
+    top: 0;
+    bottom: 0;
+    width: 1px; /* 1 像素精致铅笔中线 */
+    background-color: var(--line-color);
+    z-index: 1;
+}
+
+#nodes-layer {
+    display: flex;
+    flex-direction: column; 
+    gap: 28px; 
+    position: relative;
+    z-index: 2;
+    width: 100%;
+}
+
+.memo-node-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.node-timestamp-block {
+    width: 110px;
+    text-align: right;
+    padding-right: 15px;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.ts-date {
+    font-size: 11px;
+    color: var(--muji-light);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.ts-time {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muji-gray);
+    display: block;
+}
+
+.memo-node-skin {
+    display: flex;
+    align-items: center;
+    width: calc(100% - 110px);
+    position: relative;
+}
+
+/* 轴交界圆点 */
+.node-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background-color: var(--paper-bg);
+    border: 1px solid var(--muji-light);
+    box-shadow: none !important;
+    flex-shrink: 0;
+    margin-left: 6px;
+    transition: background-color 0.25s ease;
+}
+.memo-node-wrapper:hover .node-dot {
+    background-color: var(--muji-light);
+}
+
+/* 内容卡片格线化 */
+.node-content-box {
+    margin-left: 20px;
+    background: transparent;
+    padding: 12px 0;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    font-size: 14px;
+    width: 80%;
+    word-break: break-all;
+    border: none;
+    border-bottom: 1px solid var(--line-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.25s ease;
+}
+.memo-node-wrapper:hover .node-content-box {
+    border-color: var(--plant-green);
+}
+
+.node-text {
+    flex: 1;
+    padding-right: 10px;
+    color: var(--muji-gray);
+    line-height: 1.5;
+}
+
+/* 抹除按钮标签化 */
+.delete-btn {
+    background: transparent !important;
+    color: var(--muji-light) !important;
+    border: none !important;
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+    cursor: pointer;
+    transition: color 0.2s;
+    font-weight: normal;
+    flex-shrink: 0;
+}
+.delete-btn:hover { color: var(--danger-red) !important; }
+
+/* 二次确认交互按钮组 */
+.confirm-group {
+    display: none; 
+    gap: 4px;
+    flex-shrink: 0;
+}
+.btn-yes { color: var(--danger-red); font-size: 12px; padding: 4px 8px; border: none; background: transparent; cursor: pointer; }
+.btn-no { color: var(--muji-light); font-size: 12px; padding: 4px 8px; border: none; background: transparent; cursor: pointer; }
+.btn-yes:hover, .btn-no:hover { text-decoration: underline; }
+
+.jelly-active { animation: none !important; }
+
+@keyframes dissolve {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-4px); }
+}
+.dissolving { animation: dissolve 0.25s forwards ease-in; pointer-events: none; }
+
+#empty-state {
+    text-align: center;
+    color: var(--muji-light);
+    padding-top: 60px;
+    font-size: 13px;
+    display: none;
+}
