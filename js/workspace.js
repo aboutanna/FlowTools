@@ -1,6 +1,6 @@
 /* ==========================================================================
-   FlowTools - Workspace Core Logic (Phase 5 - Cloud Pinning System)
-   ========================================================================= */
+   FlowTools - Workspace Core Logic (Phase 6 - Ultimate Cloud Federation)
+   ========================================================================== */
 
 import Tools from './tools.js';
 
@@ -13,8 +13,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 2. 激活动态问候语
     updateGreeting();
 
-    // 3. 【第五阶段核心】全加载并激活带 Pin 交互的云端数据排版
-    await renderWorkspaceToolsFromPrefs(user);
+    // 3. 【终极第六阶段】多表联网，动态编织全大厅的卡片与实时状态
+    await renderWorkspaceUltimate(user);
 
     // 4. 绑定安全退出事件
     const logoutBtn = document.getElementById("logoutBtn");
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // 点击页面任意空白处，悄悄收起可能打开的置顶小菜单
+    // 点击页面空白处，收起置顶小菜单
     document.addEventListener("click", () => {
         const activeMenu = document.querySelector(".pin-menu");
         if (activeMenu) activeMenu.remove();
@@ -52,23 +52,25 @@ function updateGreeting() {
 }
 
 /**
- * 【第五阶段核心】对接 tool_prefs 表的“Pin + 时间”双轨排序渲染中心
+ * 【第六阶段终极核心】大厅合流控制中心
+ * 兼顾安全降级，防止因业务表未上线导致页面崩塌
  */
-async function renderWorkspaceToolsFromPrefs(user) {
+async function renderWorkspaceUltimate(user) {
     const toolListContainer = document.getElementById("toolList");
     if (!toolListContainer) return;
 
     toolListContainer.innerHTML = "<div>Loading Muji notebook...</div>";
 
     let prefsMap = {};
+    let liveStatusMap = {
+        timeline: "暂无记录",
+        muscle: "保持专注",
+        memo: "时刻记录"
+    };
 
+    // ── 🔒 核心数据流 A：读取大厅偏好 ──
     try {
-        // A. 联网向 Supabase 索要当前用户的全部置顶与时间记录
-        const { data, error } = await db
-            .from("tool_prefs")
-            .select("tool_id, is_pinned, last_opened_at")
-            .eq("user_id", user.id);
-
+        const { data } = await db.from("tool_prefs").select("tool_id, is_pinned, last_opened_at").eq("user_id", user.id);
         if (data) {
             data.forEach(pref => {
                 prefsMap[pref.tool_id] = {
@@ -78,25 +80,48 @@ async function renderWorkspaceToolsFromPrefs(user) {
             });
         }
     } catch (err) {
-        console.error("读取云端偏好失败，降级使用默认排序:", err);
+        console.error("偏好读取降级:", err);
     }
+
+    // ── 🌿 核心数据流 B：尝试联网偷看业务表状态（带最高安全防御） ──
+    try {
+        // 1. 尝试探测 Timeline 真实业务表
+        // 计算今天的开始时间戳，用于统计“今天新增”
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const { count: timelineCount, error: tlError } = await db
+            .from("timeline_memos")
+            .select("*", { count: 'exact', head: true })
+            .eq("user_id", user.id)
+            .gte("created_at", todayStart.toISOString());
+
+        // 如果表存在且正常返回了数字，立刻擦掉假数据，换上真状态！
+        if (!tlError && timelineCount !== null) {
+            liveStatusMap.timeline = timelineCount > 0 ? `今天新增 ${timelineCount} 条` : "今天暂无新增";
+        }
+    } catch (e) {
+        // 如果表没上线，静悄悄地忽略，绝不让页面报错崩溃
+    }
+
+    try {
+        // 2. 预留 Muscle 与 Memo 表的未来动态探测触角
+        // 当你以后建立了 muscle_records 或 memos 表时，在这里写逻辑即可
+        // 目前它们会稳稳地停留在 liveStatusMap 的默认安全提示上
+    } catch (e) {}
 
     toolListContainer.innerHTML = "";
 
-    // B. 【黄金双轨排序】：置顶永远无条件压制时间，时间只在同状态内比大小
+    // ── 📐 双轨黄金排序 ──
     const sortedTools = [...Tools].sort((a, b) => {
         const prefA = prefsMap[a.id] || { isPinned: false, lastOpened: 0 };
         const prefB = prefsMap[b.id] || { isPinned: false, lastOpened: 0 };
-
-        if (prefA.isPinned !== prefB.isPinned) {
-            return prefB.isPinned - prefA.isPinned; // true (1) 比 false (0) 靠前
-        }
-        return prefB.lastOpened - prefA.lastOpened; // 最近打开的靠前
+        if (prefA.isPinned !== prefB.isPinned) return prefB.isPinned - prefA.isPinned;
+        return prefB.lastOpened - prefA.lastOpened;
     });
 
-    // C. 编织新卡片
+    // ── 编织最终的 Muji 横线卡片 ──
     sortedTools.forEach(tool => {
-        // 为了防止菜单溢出，加一层包裹容器
         const cardContainer = document.createElement("div");
         cardContainer.className = "card-container";
 
@@ -104,87 +129,76 @@ async function renderWorkspaceToolsFromPrefs(user) {
         cardAnchor.className = "tool-card";
         cardAnchor.href = tool.url; 
 
-        // 点击工具卡片主体（排除菜单按钮）触发时间戳踩点
+        // 点击卡片挂起并踩点时间
         cardAnchor.addEventListener("click", async (e) => {
-            // 如果点到的是三个点，不要触发页面跳转
             if (e.target.classList.contains("menu-btn")) return;
-            
             e.preventDefault(); 
             try {
                 const currentPinned = prefsMap[tool.id]?.isPinned || false;
-                await db.from("tool_prefs")
-                  .upsert({ 
-                      user_id: user.id, 
-                      tool_id: tool.id,
-                      is_pinned: currentPinned, // 保持原有的置顶状态不被冲掉
-                      last_opened_at: new Date().toISOString(),
-                      updated_at: new Date().toISOString()
-                  }, { onConflict: 'user_id,tool_id' });
+                await db.from("tool_prefs").upsert({ 
+                    user_id: user.id, 
+                    tool_id: tool.id,
+                    is_pinned: currentPinned,
+                    last_opened_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id,tool_id' });
             } catch (error) {
-                console.error("同步工具打开时间失败:", error);
+                console.error("时间同步失败:", error);
             } finally {
                 window.location.href = tool.url;
             }
         });
 
-        // 编织卡片内文字区域
+        // 文本包装
         const textWrapper = document.createElement("div");
         const toolTitle = document.createElement("h2");
         
+        // 换上了精雕细琢、充满棉麻纸张线条感的 Muji 极简图钉符号 ⚲
         const isPinned = prefsMap[tool.id]?.isPinned;
         toolTitle.textContent = `${isPinned ? '⚲ ' : ''}${tool.icon} ${tool.name}`; 
 
         const toolSubtitle = document.createElement("p");
-        toolSubtitle.textContent = tool.subtitle; 
+        // 💡 核心变化：不再死用 tools.js 里的写死文本，优先采用我们实时联网计算出的活状态！
+        toolSubtitle.textContent = liveStatusMap[tool.id] || tool.subtitle; 
 
         textWrapper.appendChild(toolTitle);
         textWrapper.appendChild(toolSubtitle);
 
-        // 创建右侧那颗安静内敛的三个点 ⋯ 菜单按钮
         const menuButton = document.createElement("button");
         menuButton.className = "menu-btn";
         menuButton.textContent = "⋯";
 
-        // ── 【第五阶段核心交互】弹出菜单与云端 Pin 状态切换 ──
+        // 三个点菜单交互
         menuButton.addEventListener("click", (e) => {
             e.preventDefault();
-            e.stopPropagation(); // 阻断点击传递，防止被最外层直接关闭
+            e.stopPropagation();
 
-            // 如果已经有菜单打开了，先删掉它
             const existingMenu = document.querySelector(".pin-menu");
             if (existingMenu) existingMenu.remove();
 
-            // 生成轻量纸面小菜单
             const pinMenu = document.createElement("div");
             pinMenu.className = "pin-menu";
 
             const pinActionItem = document.createElement("button");
             pinActionItem.className = "menu-item";
-            // 聪明识别当前状态，动态提供切换文本
             pinActionItem.textContent = isPinned ? "Unpin (取消置顶)" : "Pin (置顶)";
 
-            // 绑定真正的云端改值动作
             pinActionItem.addEventListener("click", async (actionEvent) => {
                 actionEvent.stopPropagation();
-                pinMenu.remove(); // 迅速收起菜单
+                pinMenu.remove();
 
-                const currentOpened = prefsMap[tool.id]?.lastOpened ? new Date(prefsMap[tool.id].lastOpened).toISOString() : null;
+                const currentOpened = prefsMap[tool.id]?.lastOpened ? new Date(preferencesMap[tool.id].lastOpened).toISOString() : null;
 
-                // 直接命令 Supabase 翻转当前的置顶状态
-                const { error } = await db.from("tool_prefs")
-                    .upsert({
-                        user_id: user.id,
-                        tool_id: tool.id,
-                        is_pinned: !isPinned, // 状态直接取反！
-                        last_opened_at: currentOpened, // 锁定原有的时间戳
-                        updated_at: new Date().toISOString()
-                    }, { onConflict: 'user_id,tool_id' });
+                const { error } = await db.from("tool_prefs").upsert({
+                    user_id: user.id,
+                    tool_id: tool.id,
+                    is_pinned: !isPinned,
+                    last_opened_at: currentOpened,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id,tool_id' });
 
                 if (!error) {
-                    // 云端改完后，无刷实时重新排版整个大厅！
-                    await renderWorkspaceToolsFromPrefs(user);
-                } else {
-                    console.error("置顶操作失败:", error);
+                    await renderWorkspaceUltimate(user);
                 }
             });
 
@@ -195,7 +209,6 @@ async function renderWorkspaceToolsFromPrefs(user) {
         cardAnchor.appendChild(textWrapper);
         cardAnchor.appendChild(menuButton);
         cardContainer.appendChild(cardAnchor);
-
         toolListContainer.appendChild(cardContainer);
     });
 }
