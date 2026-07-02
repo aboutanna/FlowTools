@@ -1,21 +1,20 @@
 /* ==========================================================================
-   FlowTools - Workspace Core Logic (Phase 3 - Dynamic Tools Rendering)
+   FlowTools - Workspace Core Logic (Phase 4 - Supabase Last Opened)
    ========================================================================== */
 
-// 优雅引入工具注册中心的数据底座
 import Tools from './tools.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    // 1. 身份状态守卫
+    // 1. 身份状态守卫（获取当前登录的真用户）
     const user = await Auth.requireLogin();
     if (!user) return;
 
     // 2. 激活动态问候语
     updateGreeting();
 
-    // 3. 动态驱动：根据 tools.js 自动生成并排版卡片
-    renderWorkspaceTools();
+    // 3. 【第四阶段核心】从 Supabase 读取数据并自动排版卡片
+    await renderWorkspaceToolsFromSupabase(user);
 
     // 4. 绑定安全退出事件
     const logoutBtn = document.getElementById("logoutBtn");
@@ -47,45 +46,82 @@ function updateGreeting() {
 }
 
 /**
- * 【第三阶段核心】数据驱动渲染中心
- * 遍历 tools.js 中的数组，自动为 Muji 笔记本生成带植物灰绿交互的横线卡片
+ * 【第四阶段真数据核心】对接 Supabase 排序渲染中心
  */
-function renderWorkspaceTools() {
+async function renderWorkspaceToolsFromSupabase(user) {
     const toolListContainer = document.getElementById("toolList");
     if (!toolListContainer) return;
 
-    // 清空可能残留的旧 HTML
+    toolListContainer.innerHTML = "<div>Loading Muji notebook...</div>";
+
+    let supabaseLastOpened = {};
+
+    try {
+        // A. 联网向 Supabase 的 profiles 表索要当前用户的 last_opened 记录
+        const { data, error } = await db
+            .from("profiles")
+            .select("last_opened")
+            .eq("id", user.id)
+            .single();
+
+        if (data && data.last_opened) {
+            supabaseLastOpened = data.last_opened; // 成功拿到云端时间数据
+        }
+    } catch (err) {
+        console.error("读取云端排序失败，降级使用默认排序:", err);
+    }
+
     toolListContainer.innerHTML = "";
 
-    // 使用真实的现代数据流，一行一行编织卡片
-    Tools.forEach(tool => {
-        // 创建一根可以点击跳转的行线
+    // B. 根据云端时间戳大小进行聪明排序
+    const sortedTools = [...Tools].sort((a, b) => {
+        const timeA = supabaseLastOpened[a.id] || 0;
+        const timeB = supabaseLastOpened[b.id] || 0;
+        return timeB - timeA; // 最近打开的排在最上面
+    });
+
+    // C. 开始一行一行编织排序后的新卡片
+    sortedTools.forEach(tool => {
         const cardAnchor = document.createElement("a");
         cardAnchor.className = "tool-card";
-        cardAnchor.href = tool.url; // 完美绑定去往各功能目录的独立入口
+        cardAnchor.href = tool.url; 
+
+        // ── 核心云端交互埋点 ──
+        // 当用户点击这张卡片时，不仅要跳走，还要立刻把这一秒的时间戳异步同步回 Supabase 云端数据库
+        cardAnchor.addEventListener("click", async (e) => {
+            // 更新本地数据准备上传
+            supabaseLastOpened[tool.id] = Date.now();
+            
+            // 悄悄发送给 Supabase，不阻碍用户点击跳转的流畅感
+            db.from("profiles")
+              .upsert({ 
+                  id: user.id, 
+                  last_opened: supabaseLastOpened 
+              })
+              .then(({ error }) => {
+                  if (error) console.error("同步云端时间失败:", error);
+              });
+        });
 
         // 编织卡片内部的文本区域
         const textWrapper = document.createElement("div");
 
         const toolTitle = document.createElement("h2");
-        toolTitle.textContent = `${tool.icon} ${tool.name}`; // 优雅融合 Emoji 与工具名称
+        toolTitle.textContent = `${tool.icon} ${tool.name}`; 
 
         const toolSubtitle = document.createElement("p");
-        toolSubtitle.textContent = tool.subtitle; // 渲染我们在 tools.js 里留下的精美副标题
+        toolSubtitle.textContent = tool.subtitle; 
 
         textWrapper.appendChild(toolTitle);
         textWrapper.appendChild(toolSubtitle);
 
-        // 创建右侧那颗安静内敛的三个点 ⋯ 菜单按钮
         const menuButton = document.createElement("button");
         menuButton.className = "menu-btn";
         menuButton.textContent = "⋯";
 
-        // 将部件整齐地拼装进横线卡片中
         cardAnchor.appendChild(textWrapper);
         cardAnchor.appendChild(menuButton);
 
-        // 最终挂载到 Muji 笔记本大厅的主面板上
         toolListContainer.appendChild(cardAnchor);
     });
 }
