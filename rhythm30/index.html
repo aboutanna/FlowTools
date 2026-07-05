@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhythm — FlowTools</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <style>
+        body { align-items: flex-start; }
+
+        /* ── BPM hero ── */
+        .bpm-hero {
+            text-align: center;
+            margin: 40px 0 32px;
+            user-select: none;
+        }
+
+        .bpm-number {
+            font-family: var(--font-display);
+            font-size: 88px;
+            font-weight: 200;
+            letter-spacing: -0.04em;
+            color: var(--text);
+            line-height: 1;
+            transition: color var(--ease-slow);
+            font-variant-numeric: tabular-nums;
+        }
+        .bpm-number.playing { color: var(--success); }
+
+        .bpm-unit {
+            font-size: 11px;
+            color: var(--text-dim);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-top: 6px;
+        }
+
+        .tempo-name {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 4px;
+            min-height: 18px;
+            font-style: italic;
+        }
+
+        /* ── Step buttons ── */
+        .step-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+        .btn-step {
+            font-size: 13px;
+            color: var(--text-light);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 7px 16px;
+            background: none;
+            transition: var(--ease);
+        }
+        .btn-step:hover { border-color: var(--text-light); color: var(--text); }
+
+        /* ── Slider ── */
+        .slider-wrap { margin-bottom: 32px; }
+
+        .bpm-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 2px;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+        .bpm-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--text);
+            cursor: pointer;
+            transition: transform var(--ease);
+        }
+        .bpm-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        .bpm-slider::-moz-range-thumb {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: var(--text);
+            border: none;
+            cursor: pointer;
+        }
+
+        /* ── Time signature row ── */
+        .sig-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 36px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--border);
+        }
+        .sig-label {
+            font-size: 12px;
+            color: var(--text-light);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .sig-row select { flex: 1; max-width: 140px; }
+
+        /* ── Beat indicators ── */
+        .beats-row {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 44px;
+            min-height: 12px;
+        }
+        .beat-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: background 0.07s ease, transform 0.07s ease;
+        }
+        .beat-dot.lit { background: var(--text-light); transform: scale(1.3); }
+        .beat-dot.accent { background: var(--primary); transform: scale(1.6); }
+
+        /* ── Start/Stop ── */
+        .btn-main {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            font-size: 13px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: none;
+            cursor: pointer;
+            transition: var(--ease);
+        }
+        .btn-main:hover { border-color: var(--text); }
+        .btn-main.playing {
+            background: var(--text);
+            color: #fff;
+            border-color: var(--text);
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <a href="../workspace.html" class="back-nav">Workspace</a>
+
+    <header class="page-header">
+        <h1 class="page-title">Rhythm</h1>
+        <p class="page-subtitle">极简节拍器。</p>
+    </header>
+
+    <div class="bpm-hero">
+        <div class="bpm-number" id="bpmDisplay">120</div>
+        <div class="bpm-unit">BPM</div>
+        <div class="tempo-name" id="tempoName">Moderato</div>
+    </div>
+
+    <div class="step-row">
+        <button class="btn-step" id="m10">−10</button>
+        <button class="btn-step" id="m1">−1</button>
+        <button class="btn-step" id="p1">+1</button>
+        <button class="btn-step" id="p10">+10</button>
+    </div>
+
+    <div class="slider-wrap">
+        <input type="range" min="30" max="240" value="120" id="bpmSlider" class="bpm-slider">
+    </div>
+
+    <div class="sig-row">
+        <span class="sig-label">拍号</span>
+        <select id="timeSig">
+            <option value="4">4 / 4</option>
+            <option value="3">3 / 4</option>
+            <option value="2">2 / 4</option>
+            <option value="6">6 / 8</option>
+        </select>
+    </div>
+
+    <div class="beats-row" id="beatsRow"></div>
+
+    <button class="btn-main" id="startBtn">Start</button>
+</div>
+
+<script>
+/* ── Tempo names ── */
+const TEMPOS = [
+    [20,"Larghissimo"],[40,"Grave"],[60,"Largo"],[66,"Larghetto"],
+    [76,"Adagio"],[108,"Andante"],[120,"Moderato"],[156,"Allegro"],
+    [176,"Vivace"],[200,"Presto"],[220,"Prestissimo"]
+];
+function tempoName(b) {
+    for (let i = TEMPOS.length-1; i >= 0; i--)
+        if (b >= TEMPOS[i][0]) return TEMPOS[i][1];
+    return "";
+}
+
+/* ── Engine ── */
+let audioCtx = null;
+let playing  = false;
+let bpm      = 120;
+let beats    = 4;
+let beat     = 0;
+let nextTime = 0;
+let timer    = null;
+const AHEAD  = 0.1, LOOK = 25;
+
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function tick(time, accent) {
+    const osc = audioCtx.createOscillator();
+    const g   = audioCtx.createGain();
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.frequency.value = accent ? 880 : 440;
+    g.gain.setValueAtTime(accent ? 0.9 : 0.5, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.07);
+    osc.start(time); osc.stop(time + 0.07);
+}
+
+function advance() {
+    nextTime += 60 / bpm;
+    beat = (beat + 1) % beats;
+}
+
+function schedule() {
+    while (nextTime < audioCtx.currentTime + AHEAD) {
+        const b = beat;
+        tick(nextTime, b === 0);
+        const delay = Math.max(0, (nextTime - audioCtx.currentTime) * 1000);
+        setTimeout(() => { if (playing) lightDots(b); }, delay);
+        advance();
+    }
+    timer = setTimeout(schedule, LOOK);
+}
+
+function startM() {
+    initAudio();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    playing = true; beat = 0;
+    nextTime = audioCtx.currentTime + 0.05;
+    document.getElementById("startBtn").textContent = "Stop";
+    document.getElementById("startBtn").classList.add("playing");
+    document.getElementById("bpmDisplay").classList.add("playing");
+    schedule();
+}
+
+function stopM() {
+    playing = false;
+    clearTimeout(timer);
+    document.getElementById("startBtn").textContent = "Start";
+    document.getElementById("startBtn").classList.remove("playing");
+    document.getElementById("bpmDisplay").classList.remove("playing");
+    document.querySelectorAll(".beat-dot").forEach(d => d.classList.remove("lit","accent"));
+}
+
+/* ── Dots ── */
+function buildDots() {
+    const row = document.getElementById("beatsRow");
+    row.innerHTML = "";
+    for (let i = 0; i < beats; i++) {
+        const d = document.createElement("div");
+        d.className = "beat-dot";
+        row.appendChild(d);
+    }
+}
+
+function lightDots(b) {
+    const dots = document.querySelectorAll(".beat-dot");
+    dots.forEach(d => d.classList.remove("lit","accent"));
+    if (dots[b]) {
+        dots[b].classList.add("lit");
+        if (b === 0) dots[b].classList.add("accent");
+    }
+}
+
+/* ── UI sync ── */
+function adjustBpm(delta) {
+    bpm = Math.min(240, Math.max(30, bpm + delta));
+    syncBpmUi();
+    if (playing) { stopM(); startM(); }
+}
+
+function syncBpmUi() {
+    document.getElementById("bpmDisplay").textContent = bpm;
+    document.getElementById("bpmSlider").value        = bpm;
+    document.getElementById("tempoName").textContent  = tempoName(bpm);
+}
+
+/* ── Events ── */
+document.getElementById("startBtn").addEventListener("click", () => playing ? stopM() : startM());
+document.getElementById("bpmSlider").addEventListener("input", e => {
+    bpm = parseInt(e.target.value); syncBpmUi();
+    if (playing) { stopM(); startM(); }
+});
+document.getElementById("timeSig").addEventListener("change", e => {
+    beats = parseInt(e.target.value); buildDots();
+    if (playing) { stopM(); startM(); }
+});
+document.getElementById("m10").addEventListener("click", () => adjustBpm(-10));
+document.getElementById("m1").addEventListener("click",  () => adjustBpm(-1));
+document.getElementById("p1").addEventListener("click",  () => adjustBpm(1));
+document.getElementById("p10").addEventListener("click", () => adjustBpm(10));
+
+/* ── Init ── */
+buildDots();
+syncBpmUi();
+</script>
+</body>
+</html>

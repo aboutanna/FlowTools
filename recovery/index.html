@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recovery — FlowTools</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <style>
+        /* ── extra tokens for rings ── */
+        :root {
+            --ring-track:      #E8E5DF;
+            --ring-early-fill: #C5B99A;
+            --ring-fill:       var(--success);
+            --ring-ready:      var(--success);
+        }
+
+        /* ── Preset chip bar ── */
+        .preset-bar {
+            display: flex;
+            gap: 7px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            margin-bottom: 16px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .preset-bar::-webkit-scrollbar { display: none; }
+
+        .chip {
+            font-size: 12px;
+            color: var(--text-light);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 5px 13px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            background: none;
+            cursor: pointer;
+            transition: var(--ease);
+        }
+        .chip:hover { border-color: var(--text); color: var(--text); }
+        .chip.more-btn {
+            color: var(--text-dim);
+            letter-spacing: 0.1em;
+        }
+
+        /* ── Add form ── */
+        .add-form {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .add-form input[type="text"] { flex: 1; min-width: 120px; }
+        .add-form input[type="number"] { width: 64px; flex: none; }
+        .add-form select { width: 82px; flex: none; }
+
+        /* ── Recovery item row ── */
+        .rec-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--border);
+            transition: border-color var(--ease), padding-left var(--ease);
+        }
+        .rec-row:hover { border-color: var(--border-hover); padding-left: 4px; }
+
+        /* ring column */
+        .rec-ring { flex-shrink: 0; display: flex; align-items: center; }
+
+        /* text column */
+        .rec-body { flex: 1; min-width: 0; }
+        .rec-name {
+            font-size: 15px;
+            font-weight: 400;
+            color: var(--text);
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .rec-meta { font-size: 12px; color: var(--text-light); }
+        .rec-meta .ready-text { color: var(--success); }
+        .rec-meta .pin-text {
+            color: var(--text-dim);
+            font-size: 11px;
+            margin-left: 4px;
+        }
+
+        /* action column */
+        .rec-actions { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+
+        /* ── Preset editor panel ── */
+        .preset-editor {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 28px;
+            display: none;
+        }
+        .preset-editor.open { display: block; }
+
+        .preset-editor h3 {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 16px;
+            letter-spacing: 0.02em;
+        }
+
+        .preset-edit-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .preset-edit-row:last-of-type { border-bottom: none; }
+
+        .preset-edit-name {
+            flex: 1;
+            font-size: 13px;
+            padding: 6px 10px;
+            font-family: var(--font);
+        }
+        .preset-edit-val  { width: 58px; font-size: 13px; padding: 6px 8px; }
+        .preset-edit-unit { width: 72px; font-size: 13px; padding: 6px 8px; }
+
+        .preset-editor-add {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .preset-editor-add input[type="text"] { flex: 1; min-width: 100px; font-size: 13px; padding: 7px 10px; }
+        .preset-editor-add input[type="number"] { width: 60px; font-size: 13px; padding: 7px 8px; }
+        .preset-editor-add select { width: 76px; font-size: 13px; padding: 7px 8px; }
+
+        .preset-editor-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .limit-note {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <a href="../workspace.html" class="back-nav">Workspace</a>
+
+    <header class="page-header">
+        <h1 class="page-title">Recovery</h1>
+        <p class="page-subtitle">身体、视觉与情绪的恢复周期。</p>
+    </header>
+
+    <!-- Preset chip bar: 6 chips + ... edit button -->
+    <div class="preset-bar" id="presetBar"></div>
+
+    <!-- Preset editor panel (hidden by default) -->
+    <div class="preset-editor" id="presetEditor">
+        <h3>编辑快捷项目</h3>
+        <div id="presetEditorList"></div>
+        <p class="limit-note" id="limitNote"></p>
+        <div class="preset-editor-add" id="presetAddRow">
+            <input type="text" id="newChipName" placeholder="新名称" autocomplete="off">
+            <input type="number" id="newChipVal" value="30" min="1">
+            <select id="newChipUnit">
+                <option value="min">分钟</option>
+                <option value="h" selected>小时</option>
+                <option value="d">天</option>
+            </select>
+            <button class="btn-add" id="addChipBtn">添加</button>
+        </div>
+        <div class="preset-editor-footer">
+            <button class="btn-inline" id="closeEditorBtn">完成</button>
+        </div>
+    </div>
+
+    <!-- Add form -->
+    <div class="add-form">
+        <input type="text" id="recName" placeholder="恢复什么？" autocomplete="off">
+        <input type="number" id="recVal" min="1" value="72">
+        <select id="recUnit">
+            <option value="min">分钟</option>
+            <option value="h" selected>小时</option>
+            <option value="d">天</option>
+        </select>
+        <button class="btn-add" id="addRecBtn">加入</button>
+    </div>
+
+    <div id="recList"></div>
+</div>
+<div class="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/common.js"></script>
+<script>
+/* ====================================================================
+   State
+   ==================================================================== */
+let currentUser   = null;
+let allItems      = [];   // current recovery items from DB
+let refreshTimer  = null;
+
+const CHIP_KEY    = "ft_recovery_chips";  // localStorage key for presets
+const MAX_CHIPS   = 6;
+
+// Default chips
+const DEFAULT_CHIPS = [
+    { name: "🏋️ 深蹲",    val: 72,  unit: "h"   },
+    { name: "🏋️ 卧推",    val: 48,  unit: "h"   },
+    { name: "🏃 跑步",    val: 24,  unit: "h"   },
+    { name: "👀 远眺",    val: 30,  unit: "min" },
+    { name: "🧘 情绪",    val: 2,   unit: "h"   },
+    { name: "💻 深度工作", val: 15,  unit: "min" },
+];
+
+/* ====================================================================
+   Init
+   ==================================================================== */
+document.addEventListener("DOMContentLoaded", async () => {
+    currentUser = await Auth.requireLogin();
+    if (!currentUser) return;
+
+    renderPresetBar();
+    await loadItems();
+
+    document.getElementById("addRecBtn").addEventListener("click", addItem);
+    document.getElementById("recName").addEventListener("keydown", e => {
+        if (e.key === "Enter") addItem();
+    });
+
+    document.getElementById("closeEditorBtn").addEventListener("click", () => {
+        document.getElementById("presetEditor").classList.remove("open");
+    });
+
+    document.getElementById("addChipBtn").addEventListener("click", addNewChip);
+
+    // Refresh rings every 60 s
+    refreshTimer = setInterval(() => renderItems(allItems), 60000);
+});
+
+/* ====================================================================
+   Preset chips
+   ==================================================================== */
+function loadChips() {
+    try {
+        const raw = localStorage.getItem(CHIP_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch (_) {}
+    return [...DEFAULT_CHIPS];
+}
+
+function saveChips(chips) {
+    localStorage.setItem(CHIP_KEY, JSON.stringify(chips));
+}
+
+function renderPresetBar() {
+    const bar   = document.getElementById("presetBar");
+    const chips = loadChips();
+    bar.innerHTML = "";
+
+    chips.forEach((chip, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "chip";
+        btn.textContent = chip.name;
+        btn.addEventListener("click", () => {
+            // Populate the add form
+            const rawName = chip.name.replace(/^[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF} ]+/u, "").trim();
+            document.getElementById("recName").value = chip.name;
+            document.getElementById("recVal").value  = chip.val;
+            document.getElementById("recUnit").value = chip.unit;
+            document.getElementById("recName").focus();
+        });
+        bar.appendChild(btn);
+    });
+
+    // "…" edit button always at end
+    const editBtn = document.createElement("button");
+    editBtn.className = "chip more-btn";
+    editBtn.textContent = "…";
+    editBtn.title = "编辑快捷项目";
+    editBtn.addEventListener("click", openEditor);
+    bar.appendChild(editBtn);
+}
+
+function openEditor() {
+    const editor = document.getElementById("presetEditor");
+    editor.classList.add("open");
+    renderEditorList();
+}
+
+function renderEditorList() {
+    const chips    = loadChips();
+    const list     = document.getElementById("presetEditorList");
+    const note     = document.getElementById("limitNote");
+    const addRow   = document.getElementById("presetAddRow");
+    list.innerHTML = "";
+
+    note.textContent = `${chips.length} / ${MAX_CHIPS} 个快捷项目`;
+    addRow.style.display = chips.length >= MAX_CHIPS ? "none" : "flex";
+
+    chips.forEach((chip, idx) => {
+        const row = document.createElement("div");
+        row.className = "preset-edit-row";
+
+        const nameInput = document.createElement("input");
+        nameInput.type      = "text";
+        nameInput.className = "preset-edit-name";
+        nameInput.value     = chip.name;
+        nameInput.addEventListener("change", () => {
+            chips[idx].name = nameInput.value.trim() || chip.name;
+            saveChips(chips);
+            renderPresetBar();
+        });
+
+        const valInput = document.createElement("input");
+        valInput.type      = "number";
+        valInput.className = "preset-edit-val";
+        valInput.min       = "1";
+        valInput.value     = chip.val;
+        valInput.addEventListener("change", () => {
+            chips[idx].val = parseFloat(valInput.value) || 1;
+            saveChips(chips);
+        });
+
+        const unitSel = document.createElement("select");
+        unitSel.className = "preset-edit-unit";
+        ["min","h","d"].forEach(u => {
+            const o = document.createElement("option");
+            o.value = u;
+            o.textContent = u === "min" ? "分钟" : u === "h" ? "小时" : "天";
+            if (u === chip.unit) o.selected = true;
+            unitSel.appendChild(o);
+        });
+        unitSel.addEventListener("change", () => {
+            chips[idx].unit = unitSel.value;
+            saveChips(chips);
+        });
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "btn-remove";
+        delBtn.textContent = "×";
+        delBtn.title = "删除此快捷项";
+        delBtn.addEventListener("click", () => {
+            chips.splice(idx, 1);
+            saveChips(chips);
+            renderPresetBar();
+            renderEditorList();
+        });
+
+        row.appendChild(nameInput);
+        row.appendChild(valInput);
+        row.appendChild(unitSel);
+        row.appendChild(delBtn);
+        list.appendChild(row);
+    });
+}
+
+function addNewChip() {
+    const chips = loadChips();
+    if (chips.length >= MAX_CHIPS) { showToast(`最多 ${MAX_CHIPS} 个快捷项目`); return; }
+
+    const name = document.getElementById("newChipName").value.trim();
+    const val  = parseFloat(document.getElementById("newChipVal").value) || 1;
+    const unit = document.getElementById("newChipUnit").value;
+    if (!name) { showToast("请输入快捷项名称"); return; }
+
+    chips.push({ name, val, unit });
+    saveChips(chips);
+    document.getElementById("newChipName").value = "";
+    renderPresetBar();
+    renderEditorList();
+}
+
+/* ====================================================================
+   Recovery items
+   ==================================================================== */
+async function loadItems() {
+    const { data, error } = await db.from("recovery_items")
+        .select("*")
+        .eq("user_id", currentUser.id);
+
+    if (error) { showToast("加载失败"); console.error(error); return; }
+    allItems = data || [];
+    renderItems(allItems);
+}
+
+function renderItems(items) {
+    const list = document.getElementById("recList");
+    list.innerHTML = "";
+
+    if (!items.length) {
+        list.innerHTML = '<div class="empty-state">还没有恢复项目。<br>选一个快捷项，或输入自定义项目。</div>';
+        return;
+    }
+
+    // Sort: pinned first, then by progress descending (ready = 1 at top, early = 0 at bottom)
+    const sorted = [...items].sort((a, b) => {
+        const pa = a.is_pinned || false;
+        const pb = b.is_pinned || false;
+        if (pa !== pb) return pb - pa; // pinned first
+        const progA = recoveryProgress(a.last_started_at, a.duration_minutes);
+        const progB = recoveryProgress(b.last_started_at, b.duration_minutes);
+        return progB - progA; // higher progress (more recovered) first
+    });
+
+    sorted.forEach(item => renderRow(item, list));
+}
+
+function renderRow(item, container) {
+    const prog    = recoveryProgress(item.last_started_at, item.duration_minutes);
+    const isReady = prog >= 1;
+    const remain  = formatRemaining(item.last_started_at, item.duration_minutes);
+    const dur     = bestUnit(item.duration_minutes);
+    const isPinned = item.is_pinned || false;
+
+    const row = document.createElement("div");
+    row.className = "rec-row";
+
+    // ── SVG Ring ──
+    const ringWrap = document.createElement("div");
+    ringWrap.className = "rec-ring";
+    ringWrap.appendChild(makeSvgRing(prog, 38, 3.5));
+
+    // ── Body ──
+    const body = document.createElement("div");
+    body.className = "rec-body";
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "rec-name";
+    nameEl.textContent = item.name;
+
+    const metaEl = document.createElement("div");
+    metaEl.className = "rec-meta";
+
+    if (isReady) {
+        metaEl.innerHTML = `<span class="ready-text">Ready</span> · ${dur.label}${isPinned ? ' <span class="pin-text">⚲</span>' : ''}`;
+    } else {
+        const pct = Math.round(prog * 100);
+        metaEl.innerHTML = `${remain ? remain + ' · ' : ''}${pct}% · ${dur.label}${isPinned ? ' <span class="pin-text">⚲</span>' : ''}`;
+    }
+
+    body.appendChild(nameEl);
+    body.appendChild(metaEl);
+
+    // ── Actions ──
+    const actions = document.createElement("div");
+    actions.className = "rec-actions";
+
+    // Restart / Start button
+    const restartBtn = document.createElement("button");
+    restartBtn.className = `btn-inline${isReady ? " primary" : ""}`;
+    restartBtn.textContent = "重新开始";
+    restartBtn.addEventListener("click", async () => {
+        restartBtn.disabled = true;
+        restartBtn.style.opacity = "0.5";
+        await restartItem(item.id);
+        // loadItems re-renders so the button element is gone; no need to re-enable
+    });
+
+    // Pin / unpin button (⋯ menu style)
+    const pinBtn = document.createElement("button");
+    pinBtn.className = "btn-remove";
+    pinBtn.textContent = isPinned ? "⚲" : "○";
+    pinBtn.title = isPinned ? "取消置顶" : "置顶";
+    pinBtn.style.color = isPinned ? "var(--text-light)" : "var(--text-dim)";
+    pinBtn.style.fontSize = "14px";
+    pinBtn.addEventListener("click", () => togglePin(item.id, isPinned));
+
+    // Delete button
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn-remove";
+    delBtn.textContent = "×";
+    delBtn.title = "删除";
+    delBtn.addEventListener("click", () => removeItem(item.id, item.name));
+
+    actions.appendChild(restartBtn);
+    actions.appendChild(pinBtn);
+    actions.appendChild(delBtn);
+
+    row.appendChild(ringWrap);
+    row.appendChild(body);
+    row.appendChild(actions);
+    container.appendChild(row);
+}
+
+/* ====================================================================
+   CRUD
+   ==================================================================== */
+async function addItem() {
+    const name = document.getElementById("recName").value.trim();
+    const val  = document.getElementById("recVal").value;
+    const unit = document.getElementById("recUnit").value;
+    if (!name) { showToast("请输入项目名称"); return; }
+
+    const minutes = toMinutes(val, unit);
+
+    const now = new Date().toISOString();
+    const { error } = await db.from("recovery_items").insert({
+        user_id:          currentUser.id,
+        name,
+        duration_minutes: minutes,
+        category:         "other",
+        last_started_at:  now,
+        is_pinned:        false,
+        created_at:       now
+    });
+
+    if (error) { showToast("添加失败：" + error.message); console.error(error); return; }
+
+    document.getElementById("recName").value = "";
+    showToast(`${name} 已加入`);
+    await loadItems();
+}
+
+async function restartItem(id) {
+    const now = new Date().toISOString();
+    const { error } = await db.from("recovery_items")
+        .update({ last_started_at: now, updated_at: now })
+        .eq("id", id).eq("user_id", currentUser.id);
+
+    if (error) { showToast("更新失败"); return; }
+
+    // Log to history (non-blocking)
+    db.from("recovery_logs").insert({
+        item_id:    id,
+        user_id:    currentUser.id,
+        started_at: now
+    }).catch(() => {});
+
+    await loadItems();
+}
+
+async function togglePin(id, currentPinned) {
+    const { error } = await db.from("recovery_items")
+        .update({ is_pinned: !currentPinned, updated_at: new Date().toISOString() })
+        .eq("id", id).eq("user_id", currentUser.id);
+    if (error) { showToast("操作失败"); return; }
+    await loadItems();
+}
+
+async function removeItem(id, name) {
+    const ok = await confirmDialog(`删除「${escapeHtml(name)}」？<br>此操作不可撤销。`);
+    if (!ok) return;
+    const { error } = await db.from("recovery_items")
+        .delete()
+        .eq("id", id).eq("user_id", currentUser.id);
+    if (error) { showToast("删除失败"); return; }
+    await loadItems();
+}
+</script>
+</body>
+</html>

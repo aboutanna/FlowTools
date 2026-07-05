@@ -1,172 +1,129 @@
 /* ==========================================================================
-   FlowTools - Workspace Stylesheet (Muji Minimalism Edition)
+   FlowTools V2.0.1 — Workspace Styles
    ========================================================================== */
 
-/* 1. 基础页面排版与纸张质感 */
-body {
-    margin: 0;
-    background: #faf9f7; /* 略带温暖的纸张底色 */
-    color: #4f4f4f;      /* 舒适的深灰文本色 */
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
-}
+body { align-items: flex-start; }
 
 .workspace {
-    width: min(720px, 92%); /* 限制最大宽度，像本子一样的边界感 */
-    margin: 70px auto;      /* 页面上下留出充足的空白呼吸感 */
+    width: min(680px, 92%);
+    padding: 72px 0 80px;
 }
 
-header {
-    margin-bottom: 48px;
+.workspace-header { margin-bottom: 52px; }
+
+.workspace-wordmark {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 8px;
 }
 
-header h1 {
-    font-size: 36px;
-    font-weight: 600;
-    margin: 0;
-    letter-spacing: -0.01em;
-}
-
-#greeting {
-    color: #8b8b8b;
-    margin-top: 12px;
-    font-size: 18px;
+.workspace-greeting {
+    font-size: 16px;
+    color: var(--text-light);
     font-weight: 300;
 }
 
-/* ==========================================================================
-   2. 中间工具卡片 - Muji 笔记本纸面格线化
-   ========================================================================== */
-#toolList {
-    display: flex;
-    flex-direction: column; /* 让卡片像本子的行一样垂直排列 */
+.workspace-tagline {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 3px;
+    font-weight: 300;
 }
+
+/* ── Tool list ── */
+#toolList { display: flex; flex-direction: column; }
+
+.card-container { position: relative; }
 
 .tool-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px 0;                  /* 自然的上下行距 */
-    text-decoration: none;            /* 清除自带链接下划线 */
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
     color: inherit;
-    background: none !important;      /* 彻底剥离厚重的白色背景块 */
-    border-radius: 0 !important;      /* 彻底干掉圆角，回归纯直角横线 */
-    box-shadow: none !important;      /* 彻底剥离多余的阴影质感 */
-    border-bottom: 1px solid #E8E5DF; /* 用最浅的纸张灰作为底线 */
-    transition: border-color 0.25s ease, padding-left 0.25s ease; /* 丝滑变色过渡 */
-}
-
-/* 最后一个卡片维持横线，保持与下方页脚的自然分隔 */
-.tool-card:last-child {
-    border-bottom: 1px solid #E8E5DF;
-}
-
-/* 卡片内文本印刷体级精修 */
-.tool-card h2 {
-    font-size: 16px;
-    font-weight: 400; /* 调轻字重，显得轻盈、儒雅 */
-    color: #4f4f4f;
-    margin: 0 0 6px 0;
-}
-
-.tool-card p {
-    font-size: 13px;
-    color: #8b8b8b; /* 动态假数据变为温柔的浅灰 */
-    margin: 0;
-}
-
-/* 工具卡片右侧原本的厚重按钮，驯服成优雅精致的三个点 ⋯ */
-.menu-btn {
-    background: none !important;
-    border: none !important;
-    color: #cccccc !important; /* 默认状态极浅，不争夺视线 */
-    font-size: 16px;
-    padding: 0;
-    width: auto !important;
-    cursor: pointer;
-    transition: color 0.25s ease;
-}
-
-/* ── 关键卡片交互 ──
-   鼠标移入时，底线静悄悄地换成目标的柔和植物灰绿，没有任何发光与跳动 */
-.tool-card:hover {
-    border-color: #D8E6DB !important; /* 柔和泛起植物灰绿 */
-    padding-left: 4px;                /* 极其轻微、内敛的向右位移呼吸感 */
-}
-
-.tool-card:hover .menu-btn {
-    color: #8b8b8b !important;        /* 三个点在悬停时也轻轻亮起 */
-}
-
-/* ==========================================================================
-   3. 底部页脚标签 - 彻底剥离厚重外壳，变为纸面印刷文字
-   ========================================================================== */
-footer {
-    display: flex;
-    gap: 24px;
-    margin-top: 60px;
-    padding: 0;
     background: none;
-}
-
-#settingsBtn, #logoutBtn {
-    width: auto !important;             /* 强行缩回文字实际宽度，不撑满整行 */
-    padding: 0 !important;              /* 强行剥离按钮厚重的内边距 */
-    background: transparent !important;    /* 彻底透明底色 */
-    border: none !important;            /* 彻底拿掉边框线 */
-    border-radius: 0 !important;        /* 彻底消除任何圆角 */
-    box-shadow: none !important;        /* 彻底扔掉阴影 */
-    color: #8b8b8b !important;          /* 变为安静折叠在角落的边缘灰色小字 */
-    font-size: 14px !important;         /* 字号收小，尽显内敛 */
     cursor: pointer;
-    letter-spacing: 0.02em;
-    transition: color 0.25s ease;
+    transition: border-color var(--ease), padding-left var(--ease);
+    text-decoration: none;
+    width: 100%;
 }
+.tool-card:hover { border-color: var(--border-hover); padding-left: 5px; }
+.tool-card:hover .menu-btn { color: var(--text-light); }
 
-/* 彻底封印任何形式的上下跳动与物理位移，仅保留纸张文字在光线下的变色感 */
-#settingsBtn:hover, #logoutBtn:hover {
-    transform: none !important;         /* 强行压制原系统的悬浮和升降位移 */
-    color: #4f4f4f !important;          /* 悬停时字色轻轻变深，提供清晰交互 */
+.tool-card-text h2 {
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: 0.005em;
 }
+.tool-card-text p { font-size: 13px; color: var(--text-light); }
 
-#settingsBtn:active, #logoutBtn:active {
-    transform: none !important;         /* 强行压制任何点击下沉动效 */
-}
-/* ==========================================================================
-   Muji Style Action Menu (Phase 5 - Pin Popup)
-   ========================================================================== */
-.card-container {
-    position: relative; /* 为弹出菜单提供定位基准 */
-}
+.pin-mark { font-size: 11px; color: var(--text-dim); margin-right: 5px; }
 
+.menu-btn {
+    font-size: 17px;
+    color: var(--text-dim);
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color var(--ease), background var(--ease);
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+    background: none;
+    border: none;
+}
+.menu-btn:hover { color: var(--text-light); background: var(--border); }
+
+/* ── Pin popup ── */
 .pin-menu {
     position: absolute;
     right: 0;
-    top: 50px;
-    background: #faf9f7;               /* 完美契合温暖的纸张底色 */
-    border: 1px solid #E8E5DF;          /* 采用纯正的笔记本直角细格线 */
-    padding: 6px 0;
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    min-width: 100px;
+    top: calc(100% - 8px);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    padding: 4px 0;
+    z-index: 200;
+    min-width: 140px;
+    animation: menuIn .12s ease;
+}
+@keyframes menuIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .menu-item {
-    background: none !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    color: #4f4f4f !important;
-    font-size: 13px !important;
-    padding: 8px 16px !important;
+    display: block;
+    width: 100%;
     text-align: left;
+    font-size: 13px;
+    color: var(--text);
+    padding: 9px 16px;
+    background: none;
+    border: none;
     cursor: pointer;
-    width: 100% !important;
-    transition: background-color 0.2s ease;
+    transition: background var(--ease);
 }
+.menu-item:hover { background: var(--bg); }
+.menu-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+.menu-item.muted { color: var(--text-light); font-size: 12px; }
 
-/* 鼠标悬停在菜单项上时，极其温柔地泛起植物灰绿 */
-.menu-item:hover {
-    background-color: #D8E6DB !important;
-    transform: none !important; /* 坚决压制跳动 */
+/* ── Footer ── */
+.workspace-footer { display: flex; gap: 24px; margin-top: 56px; }
+
+.footer-btn {
+    font-size: 13px;
+    color: var(--text-light);
+    letter-spacing: 0.02em;
+    transition: color var(--ease);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
 }
+.footer-btn:hover { color: var(--text); }

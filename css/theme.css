@@ -1,52 +1,60 @@
-:root{
+/* ==========================================================================
+   FlowTools V2 — Design Token System
+   Muji-inspired: warm paper, no KPI, no pressure
+   ========================================================================== */
 
-    /* ========= 品牌色 ========= */
+:root {
 
-    --primary:#B89C7D;
-    --primary-hover:#A98A67;
+    /* ── Brand ── */
+    --primary: #B89C7D;
+    --primary-hover: #A98A67;
 
-    /* ========= 页面 ========= */
+    /* ── Page ── */
+    --bg: #F7F5F2;
+    --card: #FFFFFF;
+    --input: #FAFAF8;
 
-    --bg:#F7F5F2;
-    --card:#FFFFFF;
-    --input:#FAFAF8;
+    /* ── Type ── */
+    --text: #4F4F4F;
+    --text-light: #8A8A8A;
+    --text-dim: #BABABA;
 
-    /* ========= 字体 ========= */
+    /* ── Borders ── */
+    --border: #E8E5DF;
+    --border-hover: #D8E6DB;   /* the soft plant-green hover */
 
-    --text:#505050;
-    --text-light:#8A8A8A;
+    /* ── Status ── */
+    --success: #6F9278;
+    --success-bg: #F0F6F1;
+    --warning: #D5A861;
+    --warning-bg: #FBF5EB;
+    --danger: #C96969;
+    --danger-bg: #FBF0F0;
+    --neutral: #9AA8A6;
 
-    /* ========= 边框 ========= */
+    /* ── Recovery rings ── */
+    --ring-track:      #E8E5DF;
+    --ring-early-fill: #C5B99A;
+    --ring-fill:       #6F9278;
+    --ring-ready:      #4F7A58;
 
-    --border:#E8E5DF;
+    /* ── Radius ── */
+    --radius-sm: 8px;
+    --radius: 14px;
+    --radius-lg: 20px;
 
-    /* ========= 状态 ========= */
+    /* ── Shadow ── */
+    --shadow: 0 4px 20px rgba(0,0,0,.05);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,.04);
 
-    --success:#6F9278;
-    --warning:#D5A861;
-    --danger:#C96969;
+    /* ── Motion ── */
+    --ease: 0.22s ease;
+    --ease-slow: 0.35s ease;
 
-    /* ========= 圆角 ========= */
-
-    --radius-small:10px;
-    --radius:16px;
-    --radius-large:24px;
-
-    /* ========= 阴影 ========= */
-
-    --shadow:
-        0 8px 30px rgba(0,0,0,.05);
-
-    /* ========= 动画 ========= */
-
-    --transition:.25s;
-
-    /* ========= 字体 ========= */
-
-    --font:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
+    /* ── Font ── */
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+            "Helvetica Neue", sans-serif;
+    --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+                    "Helvetica Neue", sans-serif;
 
 }

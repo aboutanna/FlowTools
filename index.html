@@ -1,71 +1,184 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>FlowTools</title>
-
     <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/base.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
 
+        .login-wrap {
+            width: 100%;
+            max-width: 380px;
+        }
+
+        /* Wordmark */
+        .login-mark {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .login-caption {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 48px;
+            font-weight: 300;
+        }
+
+        /* Form fields */
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-light);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        /* Buttons */
+        .btn-login {
+            width: 100%;
+            padding: 13px;
+            background: var(--text);
+            color: #fff;
+            font-size: 14px;
+            border-radius: var(--radius-sm);
+            margin-top: 24px;
+            letter-spacing: 0.02em;
+            transition: background var(--ease);
+        }
+
+        .btn-login:hover {
+            background: #333;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 13px;
+            background: transparent;
+            color: var(--text-light);
+            font-size: 13px;
+            border-radius: var(--radius-sm);
+            margin-top: 10px;
+            transition: color var(--ease);
+            border: 1px solid var(--border);
+        }
+
+        .btn-register:hover {
+            color: var(--text);
+            border-color: var(--text);
+        }
+
+        /* Message */
+        #message {
+            font-size: 13px;
+            color: var(--danger);
+            min-height: 20px;
+            margin-top: 14px;
+            text-align: center;
+        }
+
+        /* Footer note */
+        .login-footer {
+            margin-top: 56px;
+            font-size: 12px;
+            color: var(--text-dim);
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        /* Horizontal rule between sections */
+        .login-divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 32px 0;
+        }
+    </style>
 </head>
-
 <body>
 
-    <div class="login-container card">
-        <div class="logo">
+<div class="login-wrap">
+    <p class="login-mark">FlowTools</p>
+    <p class="login-caption">一个账号，管理你的所有工具。</p>
 
-            🌿
-
-        </div>
-        <h1>FlowTools</h1>
-
-        <p>
-            一个账号，管理你的所有工具
-        </p>
-
-        <input
-            id="email"
-            type="email"
-            placeholder="请输入 Email">
-
-        <input
-            id="password"
-            type="password"
-            placeholder="请输入密码">
-
-        <button
-            id="loginBtn"
-            class="btn-primary">
-            登录
-        </button>
-
-        <button
-            id="registerBtn"
-            class="btn-secondary">
-            注册
-        </button>
-
-        <p id="message"></p>
-
+    <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="your@email.com" autocomplete="email">
     </div>
 
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
 
-    <!-- 公共模块 -->
-    <script src="js/supabase.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/database.js"></script>
+    <button id="loginBtn" class="btn-login">登录</button>
+    <button id="registerBtn" class="btn-register">注册新账号</button>
 
-    <!-- 当前页面 -->
-    <script src="js/index.js"></script>
+    <p id="message"></p>
 
+    <hr class="login-divider">
+
+    <p class="login-footer">
+        FlowTools — 安静、会成长的个人工作台<br>
+        Take your time.
+    </p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    const user = await Auth.currentUser();
+    if (user) { location.href = "workspace.html"; return; }
+
+    const msg = document.getElementById("message");
+
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+        const email    = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        msg.textContent = "";
+        if (!email || !password) { msg.textContent = "请输入邮箱和密码"; return; }
+        const { error } = await Auth.login(email, password);
+        if (error) { msg.textContent = error.message; return; }
+        location.href = "workspace.html";
+    });
+
+    document.getElementById("registerBtn").addEventListener("click", async () => {
+        const email    = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        msg.textContent = "";
+        if (!email || !password) { msg.textContent = "请输入邮箱和密码"; return; }
+        const { data, error } = await Auth.register(email, password);
+        if (error) { msg.textContent = error.message; return; }
+        if (data.user) {
+            await db.from("profiles").upsert({ id: data.user.id });
+        }
+        msg.style.color = "var(--success)";
+        msg.textContent = "注册成功，请登录。";
+    });
+
+    // Enter key
+    document.getElementById("password").addEventListener("keydown", e => {
+        if (e.key === "Enter") document.getElementById("loginBtn").click();
+    });
+});
+</script>
 </body>
-
 </html>
